@@ -1,16 +1,58 @@
-# React + Vite
+# RankArena Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the frontend for RankArena, a platform to view and compare LeetCode stats of university students.
+## Features
 
-Currently, two official plugins are available:
+- User signup and login forms
+- Profile page showing user info and LeetCode stats
+- University leaderboard: see all users from your university and their LeetCode stats
+- Responsive and modern UI with React and Tailwind CSS
+## Getting Started
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 1. Install dependencies
+```sh
+npm install
+```
+### 2. Start the development server
+```sh
+npm run dev
+```
+### 3. Environment Variables
+If you need to change the backend API URL, create a `.env` file in the `frontend/` directory:
+```
+VITE_API_URL=http://localhost:5000
+```
+Update your API calls in React to use this variable.
+## Usage
 
-## React Compiler
+1. **Signup:** Register a new account with name, email, password, university, and LeetCode username.
+2. **Login:** Log in with your email and password.
+3. **Profile:** View your profile and LeetCode stats.
+4. **University Leaderboard:** See all users from your university and their LeetCode stats.
+## API Integration
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- The frontend communicates with the backend via REST API endpoints:
+	- `POST /api/auth/signup`
+	- `POST /api/auth/login`
+	- `POST /api/auth/university-users`
 
-## Expanding the ESLint configuration
+## Project Structure
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- `src/pages/` – Main pages (Home, Signup, Login, Profile)
+- `src/components/` – Reusable UI components (Card, Footer, NavBar, etc.)
+- `src/lib/` – Utility functions and API helpers
+- `src/assets/` – Static assets (fonts, images)
+## Tech Stack
+
+- React
+- Vite
+- Tailwind CSS
+## Contribution
+
+1. Fork the repository
+2. Create a new branch
+3. Make your changes
+4. Submit a pull request
+## License
+
+MIT
