@@ -42,7 +42,7 @@ export default function NavBar() {
           {/* LOGO */}
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-md bg-linear-to-br from-indigo-500 to-cyan-400 flex items-center justify-center">
-              <img src="/src/assets/logo.svg" alt="RankArena Logo" className="h-6 w-6" />
+              <img src="/logo.svg" alt="RankArena Logo" className="h-6 w-6" />
             </div>
             <span className="text-white text-lg font-semibold">RankArena</span>
 
