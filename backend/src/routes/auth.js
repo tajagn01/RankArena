@@ -62,13 +62,33 @@ router.post("/signup", async (req, res) => {
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
     try {
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email }).populate("university");
         if (!user) return res.status(400).json({ error: "User not found" });
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ error: "Invalid credentials" });
 
-        res.json({ message: "Login successful", user: { name: user.name, email: user.email } });
+        // If user has leetcodeUsername but no stats, fetch them now
+        if (user.leetcodeUsername && (!user.stats || !user.stats.totalSolved)) {
+            const freshStats = await fetchLeetCodeUser(user.leetcodeUsername);
+            if (freshStats) {
+                user.stats = freshStats;
+                user.lastProfileFetch = new Date();
+                await user.save();
+                console.log("Updated stats on login for:", user.leetcodeUsername);
+            }
+        }
+
+        res.json({
+            message: "Login successful",
+            user: {
+                name: user.name,
+                email: user.email,
+                leetcodeUsername: user.leetcodeUsername,
+                stats: user.stats,
+                university: user.university?.name || "Unknown"
+            }
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
