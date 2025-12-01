@@ -22,6 +22,13 @@ export default function LoginPage() {
       });
       const data = await res.json();
       console.log("Login response:", data);
+      
+      // Check if email verification is required
+      if (data.requiresVerification) {
+        navigate("/verify-email", { state: { email } });
+        return;
+      }
+      
       if (!res.ok) throw new Error(data.error || "Login failed");
       console.log("User data to store:", data.user);
       localStorage.setItem("user", JSON.stringify(data.user));
@@ -37,10 +44,10 @@ export default function LoginPage() {
   return (
     <>
       <GridBackground />
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center px-4">
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col gap-4 p-8 w-full max-w-sm bg-black/40 border border-white/10 rounded-xl backdrop-blur-md"
+          className="flex flex-col gap-4 p-6 md:p-8 w-full max-w-sm bg-black/40 border border-white/10 rounded-xl backdrop-blur-md"
         >
           <h2 className="text-2xl font-bold text-white text-center">Login</h2>
           {error && <p className="text-red-400 text-sm text-center">{error}</p>}
