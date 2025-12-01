@@ -1,6 +1,9 @@
 import { CodeXml } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-function HeroPart() {   
+function HeroPart() {
+    const navigate = useNavigate();
+    
     return (
         <>
            <div className="relative z-10 min-h-screen flex flex-col justify-center items-center text-white font-satoshi tracking-wide px-4">
@@ -19,7 +22,10 @@ function HeroPart() {
                    Compare your LeetCode performance with peers from your college and climb the leaderboard
                 </p>
 
-                <button className="mt-8 px-8 py-3 bg-blue-600 text-white font-semibold relative overflow-hidden group transition-all duration-300 hover:scale-105  rounded-2xl cursor-pointer">
+                <button 
+                    onClick={() => navigate('/signup')}
+                    className="mt-8 px-8 py-3 bg-blue-600 text-white font-semibold relative overflow-hidden group transition-all duration-300 hover:scale-105  rounded-2xl cursor-pointer"
+                >
                     <span className="absolute inset-0 bg-blue-700 translate-y-full transition-transform duration-300 ease-out group-hover:translate-y-0 rounded-2xl"></span>
                     <span className="relative z-10">Get Started</span>
                 </button>

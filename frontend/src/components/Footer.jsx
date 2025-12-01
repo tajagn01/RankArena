@@ -15,10 +15,10 @@ function Footer() {
         <div className="text-left text-white/60 text-xs md:w-1/3 font-bold justify-start align-baseline">Build by: <br />Tajagn</div>
     
         <div className="flex flex-row gap-4 md:w-1/3 justify-end mt-6 md:mt-0">
-          <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="w-12 h-12 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 transition">
+          <a href="https://www.linkedin.com/in/tajagn-garala-06ba45265/" target="_blank" rel="noopener noreferrer" className="w-12 h-12 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 transition">
             <Linkedin className="w-6 h-6 text-white" />
           </a>
-          <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="w-12 h-12 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 transition">
+          <a href="https://x.com/Garala_Tajagn" target="_blank" rel="noopener noreferrer" className="w-12 h-12 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 transition">
             <X className="w-6 h-6 text-white" />
           </a>
         </div>
