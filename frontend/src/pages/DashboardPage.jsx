@@ -86,7 +86,7 @@ export default function DashboardPage() {
           {/* Welcome Section */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white">Welcome, {user?.name}</h1>
-            <p className="text-white/60 mt-1">{user?.email} || {user?.university}</p>
+            <p className="text-white/60 mt-1">@{user?.leetcodeUsername} | {user?.university}</p>
           </div>
 
           {/* Stats Graph */}
@@ -175,7 +175,7 @@ export default function DashboardPage() {
           <div className="bg-black/40 border border-white/10 rounded-xl p-4 md:p-6 backdrop-blur-md">
            
             <h2 className="text-xl font-semibold text-white mb-6">
-              {user?.university}  University Leaderboard
+              {user?.university}  Leaderboard
             </h2>
           
             
@@ -198,7 +198,7 @@ export default function DashboardPage() {
                     <tr
                       key={u._id || index}
                       className={`border-b border-white/5 hover:bg-white/5 transition cursor-pointer ${
-                        u.email === user?.email ? "bg-white/10" : ""
+                        u.name === user?.name ? "bg-white/10" : ""
                       }`}
                     >
                       <td className="py-3 pr-4">
@@ -207,10 +207,26 @@ export default function DashboardPage() {
                         </span>
                       </td>
                       <td className="py-3 pr-4 text-white">
-                        {u.name}
-                        {u.email === user?.email && <span className="text-xs text-white/40 ml-2">(You)</span>}
+                        <a
+                          href={`https://leetcode.com/u/${u.leetcodeUsername}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:text-blue-400 hover:underline transition"
+                        >
+                          {u.name}
+                        </a>
+                        {u.name === user?.name && <span className="text-xs text-white/40 ml-2">(You)</span>}
                       </td>
-                      <td className="py-3 pr-4 text-white/60">{u.leetcodeUsername}</td>
+                      <td className="py-3 pr-4 text-white/60">
+                        <a
+                          href={`https://leetcode.com/u/${u.leetcodeUsername}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:text-blue-400 hover:underline transition"
+                        >
+                          {u.leetcodeUsername}
+                        </a>
+                      </td>
                       <td className="py-3 pr-4 text-center text-white font-semibold">{u.stats?.totalSolved || 0}</td>
                       <td className="py-3 pr-4 text-center text-green-400">{u.stats?.easySolved || 0}</td>
                       <td className="py-3 pr-4 text-center text-yellow-400">{u.stats?.mediumSolved || 0}</td>
@@ -234,7 +250,7 @@ export default function DashboardPage() {
                 <div
                   key={u._id || index}
                   className={`border border-white/10 rounded-lg p-4 ${
-                    u.email === user?.email ? "bg-white/10 border-white/20" : "bg-black/20"
+                    u.name === user?.name ? "bg-white/10 border-white/20" : "bg-black/20"
                   }`}
                 >
                   <div className="flex items-center justify-between mb-3">
@@ -243,10 +259,15 @@ export default function DashboardPage() {
                         #{index + 1}
                       </span>
                       <div>
-                        <p className="text-white font-medium">
+                        <a
+                          href={`https://leetcode.com/u/${u.leetcodeUsername}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-white font-medium hover:text-blue-400 hover:underline transition"
+                        >
                           {u.name}
-                          {u.email === user?.email && <span className="text-xs text-white/40 ml-1">(You)</span>}
-                        </p>
+                        </a>
+                        {u.name === user?.name && <span className="text-xs text-white/40 ml-1">(You)</span>}
                         <p className="text-white/40 text-xs">@{u.leetcodeUsername}</p>
                       </div>
                     </div>

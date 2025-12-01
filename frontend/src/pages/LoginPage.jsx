@@ -4,7 +4,7 @@ import GridBackground from "../components/GridBackground";
 import API_URL from "../config";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -18,16 +18,10 @@ export default function LoginPage() {
       const res = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ name, password })
       });
       const data = await res.json();
       console.log("Login response:", data);
-      
-      // Check if email verification is required
-      if (data.requiresVerification) {
-        navigate("/verify-email", { state: { email } });
-        return;
-      }
       
       if (!res.ok) throw new Error(data.error || "Login failed");
       console.log("User data to store:", data.user);
@@ -52,11 +46,11 @@ export default function LoginPage() {
           <h2 className="text-2xl font-bold text-white text-center">Login</h2>
           {error && <p className="text-red-400 text-sm text-center">{error}</p>}
           <input
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
+            type="text"
+            value={name}
+            onChange={e => setName(e.target.value)}
             className="w-full px-4 py-2 rounded-lg bg-white/5 text-white border border-white/10 focus:outline-none focus:border-white/30 placeholder:text-white/40"
-            placeholder="Email"
+            placeholder="Username"
             required
           />
           <input

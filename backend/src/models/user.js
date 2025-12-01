@@ -9,18 +9,13 @@ const StatsSchema = new mongoose.Schema({
 }, { _id: false });
 
 const UserSchema = new mongoose.Schema({
-  name: String,
-  email: { type: String, index: true, unique: true },
+  name: { type: String, required: true, unique: true, index: true },
   password: { type: String, required: true },
   university: { type: mongoose.Schema.Types.ObjectId, ref: "University" },
   leetcodeUsername: { type: String, index: true },
   stats: { type: StatsSchema, default: () => ({}) },
   lastProfileFetch: Date,
-  createdAt: { type: Date, default: Date.now },
-  // Email verification fields
-  isVerified: { type: Boolean, default: false },
-  verificationCode: { type: String },
-  verificationCodeExpires: { type: Date }
+  createdAt: { type: Date, default: Date.now }
 });
 
 export default mongoose.model("User", UserSchema);

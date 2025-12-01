@@ -12,7 +12,6 @@ const universities = [
 
 export default function SignupPage() {
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [university, setUniversity] = useState("");
   const [leetcodeUsername, setLeetcodeUsername] = useState("");
@@ -43,19 +42,13 @@ export default function SignupPage() {
       const res = await fetch(`${API_URL}/api/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, university, leetcodeUsername })
+        body: JSON.stringify({ name, password, university, leetcodeUsername })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Signup failed");
       
-      // Redirect to email verification page
-      if (data.requiresVerification) {
-        setSuccess("Account created! Redirecting to verify your email...");
-        setTimeout(() => navigate("/verify-email", { state: { email } }), 1500);
-      } else {
-        setSuccess("Signup successful! Redirecting to login...");
-        setTimeout(() => navigate("/login"), 1500);
-      }
+      setSuccess("Signup successful! Redirecting to login...");
+      setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -79,15 +72,7 @@ export default function SignupPage() {
             value={name}
             onChange={e => setName(e.target.value)}
             className="w-full px-4 py-2 rounded-lg bg-white/5 text-white border border-white/10 focus:outline-none focus:border-white/30 placeholder:text-white/40"
-            placeholder="Name"
-            required
-          />
-          <input
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            className="w-full px-4 py-2 rounded-lg bg-white/5 text-white border border-white/10 focus:outline-none focus:border-white/30 placeholder:text-white/40"
-            placeholder="Email"
+            placeholder="Username"
             required
           />
           <input

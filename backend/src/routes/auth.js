@@ -3,20 +3,25 @@ import User from "../models/user.js";
 import bcrypt from "bcryptjs";
 import University from "../models/University.js";
 import { fetchLeetCodeUser } from "../services/leetcode.service.js";
-import { generateVerificationCode, sendVerificationEmail } from "../services/email.service.js";
 
 
 const router = express.Router();
 
-// Signup - now sends verification code
+// Signup - simplified without email verification
 router.post("/signup", async (req, res) => {
-  const { name, email, password, university, leetcodeUsername } = req.body;
+  const { name, password, university, leetcodeUsername } = req.body;
 
   try {
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    // Check if username already exists
+    const existingUser = await User.findOne({ name });
     if (existingUser) {
-      return res.status(400).json({ error: "Email already registered" });
+      return res.status(400).json({ error: "Username already taken" });
+    }
+
+    // Check if LeetCode username is already registered
+    const existingLeetcode = await User.findOne({ leetcodeUsername });
+    if (existingLeetcode) {
+      return res.status(400).json({ error: "This LeetCode account is already registered" });
     }
 
     let uni = await University.findOne({ name: university });
@@ -39,34 +44,21 @@ router.post("/signup", async (req, res) => {
 
     const hashed = await bcrypt.hash(password, 10);
 
-    // Generate verification code
-    const verificationCode = generateVerificationCode();
-    const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
     const user = await User.create({
       name,
-      email,
       password: hashed,
       university: uni._id,
       leetcodeUsername,
       stats,
-      lastProfileFetch: new Date(),
-      isVerified: false,
-      verificationCode,
-      verificationCodeExpires
+      lastProfileFetch: new Date()
     });
 
-    // Send verification email
-    const emailSent = await sendVerificationEmail(email, verificationCode, name);
-    
-    if (!emailSent) {
-      console.log("Email sending failed, but user created");
-    }
-
     res.status(201).json({
-      message: "User created. Please check your email for verification code.",
-      requiresVerification: true,
-      email: user.email
+      message: "Signup successful! You can now login.",
+      user: {
+        name: user.name,
+        leetcodeUsername: user.leetcodeUsername
+      }
     });
 
   } catch (err) {
@@ -74,94 +66,12 @@ router.post("/signup", async (req, res) => {
   }
 });
 
-// Verify email with code
-router.post("/verify-email", async (req, res) => {
-  const { email, code } = req.body;
-
-  try {
-    const user = await User.findOne({ email });
-    
-    if (!user) {
-      return res.status(400).json({ error: "User not found" });
-    }
-
-    if (user.isVerified) {
-      return res.status(400).json({ error: "Email already verified" });
-    }
-
-    if (user.verificationCode !== code) {
-      return res.status(400).json({ error: "Invalid verification code" });
-    }
-
-    if (new Date() > user.verificationCodeExpires) {
-      return res.status(400).json({ error: "Verification code expired. Please request a new one." });
-    }
-
-    // Mark user as verified
-    user.isVerified = true;
-    user.verificationCode = undefined;
-    user.verificationCodeExpires = undefined;
-    await user.save();
-
-    res.json({ message: "Email verified successfully! You can now login." });
-
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Resend verification code
-router.post("/resend-verification", async (req, res) => {
-  const { email } = req.body;
-
-  try {
-    const user = await User.findOne({ email });
-    
-    if (!user) {
-      return res.status(400).json({ error: "User not found" });
-    }
-
-    if (user.isVerified) {
-      return res.status(400).json({ error: "Email already verified" });
-    }
-
-    // Generate new verification code
-    const verificationCode = generateVerificationCode();
-    const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000);
-
-    user.verificationCode = verificationCode;
-    user.verificationCodeExpires = verificationCodeExpires;
-    await user.save();
-
-    // Send verification email
-    const emailSent = await sendVerificationEmail(email, verificationCode, user.name);
-    
-    if (!emailSent) {
-      return res.status(500).json({ error: "Failed to send verification email" });
-    }
-
-    res.json({ message: "Verification code sent to your email" });
-
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Login - now checks if email is verified
+// Login - uses name instead of email
 router.post("/login", async (req, res) => {
-    const { email, password } = req.body;
+    const { name, password } = req.body;
     try {
-        const user = await User.findOne({ email }).populate("university");
+        const user = await User.findOne({ name }).populate("university");
         if (!user) return res.status(400).json({ error: "User not found" });
-
-        // Check if email is verified
-        if (!user.isVerified) {
-          return res.status(403).json({ 
-            error: "Please verify your email before logging in",
-            requiresVerification: true,
-            email: user.email
-          });
-        }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ error: "Invalid credentials" });
@@ -181,7 +91,6 @@ router.post("/login", async (req, res) => {
             message: "Login successful",
             user: {
                 name: user.name,
-                email: user.email,
                 leetcodeUsername: user.leetcodeUsername,
                 stats: user.stats,
                 university: user.university?.name || "Unknown"
