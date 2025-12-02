@@ -10,7 +10,7 @@ export default function DashboardPage() {
   const [lastRefresh, setLastRefresh] = useState(null);
   const navigate = useNavigate();
 
-  const fetchUniversityUsers = async (university) => {
+  const fetchUniversityUsers = async (university, currentUserName) => {
     try {
       const res = await fetch(`${API_URL}/api/auth/university-users`, {
         method: "POST",
@@ -24,11 +24,13 @@ export default function DashboardPage() {
         );
         setUniversityUsers(sorted);
         
-        const currentUser = sorted.find(u => u.name === user?.name);
-        if (currentUser) {
-          const updatedUser = { ...user, stats: currentUser.stats };
-          setUser(updatedUser);
-          localStorage.setItem("user", JSON.stringify(updatedUser));
+        const foundUser = sorted.find(u => u.name === currentUserName);
+        if (foundUser) {
+          setUser(prevUser => {
+            const updatedUser = { ...prevUser, stats: foundUser.stats };
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+            return updatedUser;
+          });
         }
       }
     } catch (err) {
@@ -47,7 +49,7 @@ export default function DashboardPage() {
       });
       
       if (res.ok) {
-        await fetchUniversityUsers(user?.university);
+        await fetchUniversityUsers(user?.university, user?.name);
         setLastRefresh(new Date());
       }
     } catch (err) {
@@ -66,7 +68,7 @@ export default function DashboardPage() {
     setUser(parsedUser);
 
     const loadData = async () => {
-      await fetchUniversityUsers(parsedUser.university);
+      await fetchUniversityUsers(parsedUser.university, parsedUser.name);
       setLoading(false);
     };
     
