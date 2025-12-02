@@ -35,7 +35,7 @@ export default function NavBar() {
   };
 
   return (
-    <header className="fixed z-50 w-full top-0 left-0 backdrop-blur-2xl">
+    <header className="fixed z-50 w-full top-0 left-0 backdrop-blur-2xl nav-reveal">
       <nav className="w-full py-3 px-6 bg-transparent backdrop-blur-sm border-b border-white/10">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
 

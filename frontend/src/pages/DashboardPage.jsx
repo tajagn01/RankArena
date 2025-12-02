@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import API_URL from "../config";
 
@@ -8,6 +8,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(null);
+  const [mounted, setMounted] = useState(false);
   const navigate = useNavigate();
 
   const fetchUniversityUsers = async (university, currentUserName) => {
@@ -70,6 +71,7 @@ export default function DashboardPage() {
     const loadData = async () => {
       await fetchUniversityUsers(parsedUser.university, parsedUser.name);
       setLoading(false);
+      setTimeout(() => setMounted(true), 50);
     };
     
     loadData();
@@ -107,12 +109,12 @@ export default function DashboardPage() {
       />
       
       <div className="max-w-4xl mx-auto relative z-10">
-          <div className="mb-8">
+          <div className={`mb-8 transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <h1 className="text-3xl font-bold text-white">Welcome, {user?.name}</h1>
             <p className="text-white/60 mt-1">@{user?.leetcodeUsername} | {user?.university}</p>
           </div>
 
-          <div className="bg-black/40 border border-white/10 rounded-xl p-6 mb-6 backdrop-blur-md">
+          <div className={`bg-black/40 border border-white/10 rounded-xl p-6 mb-6 backdrop-blur-md transition-all duration-700 ease-out delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <h2 className="text-xl font-semibold text-white mb-6">Your Progress</h2>
             <div className="flex flex-col gap-4">
               <div className="group cursor-pointer">
@@ -170,7 +172,7 @@ export default function DashboardPage() {
           </div>
 
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 transition-all duration-700 ease-out delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <div className="bg-black/40 border border-white/10 rounded-xl p-4 backdrop-blur-md hover:border-white/30 transition cursor-pointer">
               <p className="text-white/60 text-sm">Total Solved</p>
               <p className="text-2xl font-bold text-white mt-1">{stats.totalSolved}</p>
@@ -189,7 +191,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-black/40 border border-white/10 rounded-xl p-4 md:p-6 backdrop-blur-md">
+          <div className={`bg-black/40 border border-white/10 rounded-xl p-4 md:p-6 backdrop-blur-md transition-all duration-700 ease-out delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
            
             <div className="flex items-center justify-between gap-4 mb-6">
               <h2 className="text-base md:text-xl font-semibold text-white">

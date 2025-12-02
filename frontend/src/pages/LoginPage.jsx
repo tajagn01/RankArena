@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -18,6 +19,7 @@ export default function LoginPage() {
       setIsLoggedIn(true);
       setMessage("You are already logged in!");
     }
+    setTimeout(() => setMounted(true), 50);
   }, []);
 
   const handleSubmit = async (e) => {
@@ -50,7 +52,7 @@ export default function LoginPage() {
       <>
         <GridBackground />
         <div className="min-h-screen flex items-center justify-center px-4">
-          <div className="flex flex-col gap-4 p-6 md:p-8 w-full max-w-sm bg-black/40 border border-white/10 rounded-xl backdrop-blur-md text-center">
+          <div className={`flex flex-col gap-4 p-6 md:p-8 w-full max-w-sm bg-black/40 border border-white/10 rounded-xl backdrop-blur-md text-center transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'}`}>
             <h2 className="text-2xl font-bold text-white">Already Logged In</h2>
             <div className="bg-white text-black text-sm py-2 px-4 rounded-lg font-medium">
               You are already logged in!
@@ -84,7 +86,7 @@ export default function LoginPage() {
       <div className="min-h-screen flex items-center justify-center px-4">
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col gap-4 p-6 md:p-8 w-full max-w-sm bg-black/40 border border-white/10 rounded-xl backdrop-blur-md"
+          className={`flex flex-col gap-4 p-6 md:p-8 w-full max-w-sm bg-black/40 border border-white/10 rounded-xl backdrop-blur-md transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'}`}
         >
           <h2 className="text-2xl font-bold text-white text-center">Login</h2>
           {message && (

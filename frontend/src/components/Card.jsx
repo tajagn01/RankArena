@@ -1,10 +1,38 @@
 import { Trophy, Users, Zap } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 
 function Card() {
+    const containerRef = useRef(null);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        const cards = entry.target.querySelectorAll('.card-reveal');
+                        cards.forEach((card, index) => {
+                            setTimeout(() => {
+                                card.classList.add('active');
+                            }, index * 150);
+                        });
+                        observer.unobserve(entry.target);
+                    }
+                });
+            },
+            { threshold: 0.2 }
+        );
+
+        if (containerRef.current) {
+            observer.observe(containerRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, []);
+
     return (
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mt-20 w-full px-6">
+        <div ref={containerRef} className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mt-20 w-full px-6">
             {/* Card 1 */}
-            <div className="group transform transition-all duration-1000 translate-y-0 opacity-100 delay-100">
+            <div className="card-reveal group opacity-0 translate-y-12" style={{ transition: 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}>
                 <div className="relative p-8 rounded-2xl border border-white/10 hover:border-white/20 transition-all duration-500 hover:transform hover:scale-105 bg-white/5 backdrop-blur-sm h-full">
                     <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     <div className="relative z-10">
@@ -18,7 +46,7 @@ function Card() {
             </div>
 
             {/* Card 2 */}
-            <div className="group transform transition-all duration-1000 translate-y-0 opacity-100 delay-200">
+            <div className="card-reveal group opacity-0 translate-y-12" style={{ transition: 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}>
                 <div className="relative p-8 rounded-2xl border border-white/10 hover:border-white/20 transition-all duration-500 hover:transform hover:scale-105 bg-white/5 backdrop-blur-sm h-full">
                     <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     <div className="relative z-10">
@@ -32,7 +60,7 @@ function Card() {
             </div>
 
             {/* Card 3 */}
-            <div className="group transform transition-all duration-1000 translate-y-0 opacity-100 delay-300">
+            <div className="card-reveal group opacity-0 translate-y-12" style={{ transition: 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}>
                 <div className="relative p-8 rounded-2xl border border-white/10 hover:border-white/20 transition-all duration-500 hover:transform hover:scale-105 bg-white/5 backdrop-blur-sm h-full">
                     <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     <div className="relative z-10">
