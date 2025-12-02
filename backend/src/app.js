@@ -11,7 +11,6 @@ import { fetchLeetCodeUser } from "./services/leetcode.service.js";
 dotenv.config();
 const app = express();
 
-// CORS configuration for production
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
@@ -20,12 +19,11 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function(origin, callback) {
-    // Allow requests with no origin (mobile apps, curl, etc)
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(null, true); // Allow all origins for now, restrict in production if needed
+      callback(null, true);
     }
   },
   credentials: true
@@ -42,20 +40,76 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-// Run every day at midnight
-cron.schedule("0 0 * * *", async () => {
-  console.log("Starting daily LeetCode stats update...");
+cron.schedule("0 */4 * * *", async () => {
+  console.log("Starting scheduled LeetCode stats update...");
   const users = await User.find({});
   for (const user of users) {
+    try {
+      const stats = await fetchLeetCodeUser(user.leetcodeUsername);
+      if (stats) {
+        user.stats = stats;
+        user.lastProfileFetch = new Date();
+        await user.save();
+        console.log(`Updated stats for ${user.leetcodeUsername}`);
+      }
+    } catch (err) {
+      console.error(`Failed to update ${user.leetcodeUsername}:`, err.message);
+    }
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+  console.log("Scheduled LeetCode stats update complete.");
+});
+
+app.post("/api/refresh-stats", async (req, res) => {
+  const { username } = req.body;
+  try {
+    const user = await User.findOne({ name: username });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
     const stats = await fetchLeetCodeUser(user.leetcodeUsername);
     if (stats) {
       user.stats = stats;
       user.lastProfileFetch = new Date();
       await user.save();
-      console.log(`Updated stats for ${user.leetcodeUsername}`);
+      return res.json({ message: "Stats refreshed", stats });
     }
+    return res.status(500).json({ error: "Failed to fetch LeetCode stats" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  console.log("Daily LeetCode stats update complete.");
+});
+
+app.post("/api/refresh-university", async (req, res) => {
+  const { university } = req.body;
+  try {
+    const University = (await import("./models/University.js")).default;
+    const uni = await University.findOne({ name: university });
+    if (!uni) {
+      return res.status(404).json({ error: "University not found" });
+    }
+
+    const users = await User.find({ university: uni._id });
+    const results = [];
+
+    for (const user of users) {
+      const stats = await fetchLeetCodeUser(user.leetcodeUsername);
+      if (stats) {
+        user.stats = stats;
+        user.lastProfileFetch = new Date();
+        await user.save();
+        results.push({ name: user.name, updated: true, stats });
+      } else {
+        results.push({ name: user.name, updated: false });
+      }
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    res.json({ message: "University stats refreshed", results });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.listen(PORT, () => {

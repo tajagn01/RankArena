@@ -39,7 +39,6 @@ export default function NavBar() {
       <nav className="w-full py-3 px-6 bg-transparent backdrop-blur-sm border-b border-white/10">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
 
-          {/* LOGO */}
           <Link to="/" className="flex items-center gap-3 cursor-pointer">
             <div className="h-10 w-10 rounded-md bg-linear-to-br from-indigo-500 to-cyan-400 flex items-center justify-center">
               <img src="/logo.svg" alt="RankArena Logo" className="h-6 w-6" />
@@ -47,7 +46,6 @@ export default function NavBar() {
             <span className="text-white text-lg font-semibold">RankArena</span>
           </Link>
 
-          {/* DESKTOP ACTIONS */}
           <div className="hidden md:flex items-center gap-4">
             {isLoggedIn ? (
               <>
@@ -82,7 +80,6 @@ export default function NavBar() {
             )}
           </div>
 
-          {/* MOBILE: hamburger */}
           <div className="md:hidden flex items-center gap-2">
             <button
               onClick={() => setMobileOpen(true)}
@@ -106,25 +103,21 @@ export default function NavBar() {
         </div>
       </nav>
 
-      {/* MOBILE PANEL */}
       <div
         className={`fixed inset-0 z-50 md:hidden transition-opacity duration-300 ${mobileOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
           }`}
       >
-        {/* Backdrop */}
         <div
           onClick={() => setMobileOpen(false)}
           className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         />
 
-        {/* Slide Panel */}
         <aside
           className={`absolute top-0 right-0 h-dvh w-64 bg-[#21242bc5] border-l border-white/10 p-5 shadow-2xl transform transition-transform duration-300 ease-in-out overflow-y-auto ${mobileOpen ? "translate-x-0" : "translate-x-full"
             }`}
         >
-          {/* Panel header */}
           <div className="flex items-center justify-between mb-6">
             <span className="text-white font-semibold text-lg">
               RankArena
@@ -149,7 +142,6 @@ export default function NavBar() {
             </button>
           </div>
 
-          {/* Mobile actions */}
           <div className="flex flex-col gap-4">
             {isLoggedIn ? (
               <>
@@ -196,7 +188,6 @@ export default function NavBar() {
             )}
           </div>
 
-          {/* Footer */}
           <div className="absolute bottom-5 left-5 text-xs text-white/60">
             © RankArena builded by tajagn
           </div>

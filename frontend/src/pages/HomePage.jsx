@@ -6,13 +6,8 @@ import Footer from "../components/Footer";
 function HomePage() {
     return (
         <>
-            {/* 1. Background Layer: Fixed position, stays behind everything */}
             <GridBackground />
-
-            {/* 2. Main Content Layer: Sits on top of the background */}
             <HeroPart />
-            
-            {/* 3. Cards Layer: Appears after scrolling */}
             <div className="relative z-10 pb-20">
                 <Card />
             </div>

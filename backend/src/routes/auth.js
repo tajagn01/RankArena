@@ -7,40 +7,33 @@ import { fetchLeetCodeUser } from "../services/leetcode.service.js";
 
 const router = express.Router();
 
-// Signup - simplified without email verification
 router.post("/signup", async (req, res) => {
   const { name, password, university, leetcodeUsername } = req.body;
 
   try {
-    // Check if username already exists
+    if (!password || password.length < 6) {
+      return res.status(400).json({ error: "Password must be at least 6 characters" });
+    }
+
     const existingUser = await User.findOne({ name });
     if (existingUser) {
       return res.status(400).json({ error: "Username already taken" });
     }
 
-    // Check if LeetCode username is already registered
     const existingLeetcode = await User.findOne({ leetcodeUsername });
     if (existingLeetcode) {
       return res.status(400).json({ error: "This LeetCode account is already registered" });
+    }
+
+    const stats = await fetchLeetCodeUser(leetcodeUsername);
+    if (!stats) {
+      return res.status(400).json({ error: "Invalid LeetCode username. Please check and try again." });
     }
 
     let uni = await University.findOne({ name: university });
     if (!uni) {
       uni = await University.create({ name: university });
     }
-
-    // Fetch REAL LeetCode stats
-    let stats = await fetchLeetCodeUser(leetcodeUsername);
-    if (!stats) {
-      stats = {
-        totalSolved: 0,
-        easySolved: 0,
-        mediumSolved: 0,
-        hardSolved: 0,
-        lastUpdated: new Date()
-      };
-    }
-    console.log("Fetched LeetCode stats:", stats);
 
     const hashed = await bcrypt.hash(password, 10);
 
@@ -66,7 +59,6 @@ router.post("/signup", async (req, res) => {
   }
 });
 
-// Login - uses name instead of email
 router.post("/login", async (req, res) => {
     const { name, password } = req.body;
     try {
@@ -76,14 +68,12 @@ router.post("/login", async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ error: "Invalid credentials" });
 
-        // If user has leetcodeUsername but no stats, fetch them now
         if (user.leetcodeUsername && (!user.stats || !user.stats.totalSolved)) {
             const freshStats = await fetchLeetCodeUser(user.leetcodeUsername);
             if (freshStats) {
                 user.stats = freshStats;
                 user.lastProfileFetch = new Date();
                 await user.save();
-                console.log("Updated stats on login for:", user.leetcodeUsername);
             }
         }
 

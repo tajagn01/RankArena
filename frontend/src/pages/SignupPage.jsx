@@ -19,10 +19,17 @@ export default function SignupPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
-  // Close dropdown when clicking outside
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -56,6 +63,38 @@ export default function SignupPage() {
     }
   };
 
+  if (isLoggedIn) {
+    return (
+      <>
+        <GridBackground />
+        <div className="min-h-screen flex items-center justify-center px-4">
+          <div className="flex flex-col gap-4 p-6 md:p-8 w-full max-w-sm bg-black/40 border border-white/10 rounded-xl backdrop-blur-md text-center">
+            <h2 className="text-2xl font-bold text-white">Already Logged In</h2>
+            <div className="bg-white text-black text-sm py-2 px-4 rounded-lg font-medium">
+              You are already logged in!
+            </div>
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="w-full py-2 rounded-lg bg-white text-black font-semibold hover:bg-white/90 transition"
+            >
+              Go to Dashboard
+            </button>
+            <button
+              onClick={() => {
+                localStorage.removeItem("user");
+                window.dispatchEvent(new Event("storage"));
+                setIsLoggedIn(false);
+              }}
+              className="w-full py-2 rounded-lg bg-white/10 text-white font-semibold hover:bg-white/20 transition"
+            >
+              Create New Account
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <GridBackground />
@@ -75,14 +114,18 @@ export default function SignupPage() {
             placeholder="Username"
             required
           />
-          <input
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            className="w-full px-4 py-2 rounded-lg bg-white/5 text-white border border-white/10 focus:outline-none focus:border-white/30 placeholder:text-white/40"
-            placeholder="Password"
-            required
-          />
+          <div>
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg bg-white/5 text-white border border-white/10 focus:outline-none focus:border-white/30 placeholder:text-white/40"
+              placeholder="Password"
+              minLength={6}
+              required
+            />
+            <p className="text-white/40 text-xs mt-1">Minimum 6 characters</p>
+          </div>
           <div className="relative" ref={dropdownRef}>
             <button
               type="button"
@@ -100,7 +143,6 @@ export default function SignupPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
             
-            {/* Custom Dropdown Menu */}
             {dropdownOpen && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-black/80 backdrop-blur-md border border-white/10 rounded-lg overflow-hidden z-50">
                 {universities.map((uni) => (
@@ -118,7 +160,6 @@ export default function SignupPage() {
               </div>
             )}
             
-            {/* Hidden input for form validation */}
             <input
               type="text"
               value={university}

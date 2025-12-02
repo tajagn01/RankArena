@@ -6,47 +6,71 @@ export default function DashboardPage() {
   const [user, setUser] = useState(null);
   const [universityUsers, setUniversityUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState(null);
   const navigate = useNavigate();
+
+  const fetchUniversityUsers = async (university) => {
+    try {
+      const res = await fetch(`${API_URL}/api/auth/university-users`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ university })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const sorted = (data.users || []).sort(
+          (a, b) => (b.stats?.totalSolved || 0) - (a.stats?.totalSolved || 0)
+        );
+        setUniversityUsers(sorted);
+        
+        const currentUser = sorted.find(u => u.name === user?.name);
+        if (currentUser) {
+          const updatedUser = { ...user, stats: currentUser.stats };
+          setUser(updatedUser);
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+        }
+      }
+    } catch (err) {
+    }
+  };
+
+  const handleRefresh = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    
+    try {
+      const res = await fetch(`${API_URL}/api/refresh-university`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ university: user?.university })
+      });
+      
+      if (res.ok) {
+        await fetchUniversityUsers(user?.university);
+        setLastRefresh(new Date());
+      }
+    } catch (err) {
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    console.log("Stored user from localStorage:", storedUser);
     if (!storedUser) {
       navigate("/login");
       return;
     }
     const parsedUser = JSON.parse(storedUser);
-    console.log("Parsed user:", parsedUser);
-    console.log("User stats:", parsedUser.stats);
     setUser(parsedUser);
 
-    const fetchUniversityUsers = async () => {
-      try {
-        console.log("Fetching university users for:", parsedUser.university);
-        const res = await fetch(`${API_URL}/api/auth/university-users`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ university: parsedUser.university })
-        });
-        const data = await res.json();
-        console.log("University users response:", data);
-        if (res.ok) {
-          const sorted = (data.users || []).sort(
-            (a, b) => (b.stats?.totalSolved || 0) - (a.stats?.totalSolved || 0)
-          );
-          console.log("Sorted users:", sorted);
-          setUniversityUsers(sorted);
-        } else {
-          console.error("Error response:", data);
-        }
-      } catch (err) {
-        console.error("Failed to fetch university users:", err);
-      } finally {
-        setLoading(false);
-      }
+    const loadData = async () => {
+      await fetchUniversityUsers(parsedUser.university);
+      setLoading(false);
     };
-
-    fetchUniversityUsers();
+    
+    loadData();
   }, [navigate]);
 
   if (loading) {
@@ -62,7 +86,6 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-black pt-24 px-4 pb-12 relative">
-      {/* Grid Background */}
       <div 
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -74,7 +97,6 @@ export default function DashboardPage() {
         }}
       />
       
-      {/* Vignette Overlay */}
       <div 
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -83,17 +105,14 @@ export default function DashboardPage() {
       />
       
       <div className="max-w-4xl mx-auto relative z-10">
-          {/* Welcome Section */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white">Welcome, {user?.name}</h1>
             <p className="text-white/60 mt-1">@{user?.leetcodeUsername} | {user?.university}</p>
           </div>
 
-          {/* Stats Graph */}
           <div className="bg-black/40 border border-white/10 rounded-xl p-6 mb-6 backdrop-blur-md">
             <h2 className="text-xl font-semibold text-white mb-6">Your Progress</h2>
             <div className="flex flex-col gap-4">
-              {/* Total Solved Bar */}
               <div className="group cursor-pointer">
                 <div className="flex justify-between text-sm text-white/80 mb-1">
                   <span>Total Solved</span>
@@ -107,7 +126,6 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Easy Solved Bar */}
               <div className="group cursor-pointer">
                 <div className="flex justify-between text-sm text-green-400/80 mb-1">
                   <span>Easy</span>
@@ -121,7 +139,6 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Medium Solved Bar */}
               <div className="group cursor-pointer">
                 <div className="flex justify-between text-sm text-yellow-400/80 mb-1">
                   <span>Medium</span>
@@ -135,7 +152,6 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Hard Solved Bar */}
               <div className="group cursor-pointer">
                 <div className="flex justify-between text-sm text-red-400/80 mb-1">
                   <span>Hard</span>
@@ -171,15 +187,36 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* University Leaderboard */}
           <div className="bg-black/40 border border-white/10 rounded-xl p-4 md:p-6 backdrop-blur-md">
            
-            <h2 className="text-xl font-semibold text-white mb-6">
-              {user?.university}  Leaderboard
-            </h2>
-          
+            <div className="flex items-center justify-between gap-4 mb-6">
+              <h2 className="text-base md:text-xl font-semibold text-white">
+                {user?.university} Leaderboard
+              </h2>
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="flex-shrink-0 flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg transition disabled:opacity-50"
+                title="Refresh Stats"
+              >
+                <svg 
+                  className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span className="hidden md:inline">{refreshing ? "Refreshing..." : "Refresh Stats"}</span>
+              </button>
+            </div>
             
-            {/* Desktop Table View */}
+            {lastRefresh && (
+              <p className="text-white/40 text-xs mb-4">
+                Last refreshed: {lastRefresh.toLocaleTimeString()}
+              </p>
+            )}
+            
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -244,7 +281,6 @@ export default function DashboardPage() {
               </table>
             </div>
 
-            {/* Mobile Card View */}
             <div className="md:hidden flex flex-col gap-3">
               {universityUsers.map((u, index) => (
                 <div

@@ -29,10 +29,8 @@ function GridBackground() {
         <rect width="100%" height="100%" fill="url(#grid)" />
       </svg>
 
-      {/* Vignette */}
       <div className="fixed inset-0 -z-10 pointer-events-none bg-linear-to-br from-black/60 via-transparent to-black/70"></div>
 
-      {/* Study Icons */}
       <div className="absolute top-0 left-0 w-full h-screen -z-10 overflow-hidden pointer-events-none hidden md:block">
         <img
           src={Book}
