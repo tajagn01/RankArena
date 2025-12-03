@@ -86,6 +86,10 @@ export default function DashboardPage() {
   }
 
   const stats = user?.stats || { totalSolved: 0, easySolved: 0, mediumSolved: 0, hardSolved: 0 };
+  const TOTAL_LEETCODE_QUESTIONS = 3768;
+  const TOTAL_EASY = 915;
+  const TOTAL_MEDIUM = 1960;
+  const TOTAL_HARD = 888;
   const maxSolved = Math.max(stats.totalSolved, stats.easySolved, stats.mediumSolved, stats.hardSolved, 1);
 
   return (
@@ -120,12 +124,12 @@ export default function DashboardPage() {
               <div className="group cursor-pointer">
                 <div className="flex justify-between text-sm text-white/80 mb-1">
                   <span>Total Solved</span>
-                  <span className="group-hover:text-white transition">{stats.totalSolved}</span>
+                  <span className="group-hover:text-white transition">{stats.totalSolved} / {TOTAL_LEETCODE_QUESTIONS}</span>
                 </div>
                 <div className="h-3 bg-white/10 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-white rounded-full transition-all duration-1000 ease-out group-hover:bg-white/80"
-                    style={{ width: `${(stats.totalSolved / maxSolved) * 100}%` }}
+                    style={{ width: `${(stats.totalSolved / TOTAL_LEETCODE_QUESTIONS) * 100}%` }}
                   />
                 </div>
               </div>
@@ -133,12 +137,12 @@ export default function DashboardPage() {
               <div className="group cursor-pointer">
                 <div className="flex justify-between text-sm text-green-400/80 mb-1">
                   <span>Easy</span>
-                  <span className="group-hover:text-green-300 transition">{stats.easySolved}</span>
+                  <span className="group-hover:text-green-300 transition">{stats.easySolved} / {TOTAL_EASY}</span>
                 </div>
                 <div className="h-3 bg-white/10 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-green-500 rounded-full transition-all duration-1000 ease-out delay-100 group-hover:bg-green-400"
-                    style={{ width: `${(stats.easySolved / maxSolved) * 100}%` }}
+                    style={{ width: `${(stats.easySolved / TOTAL_EASY) * 100}%` }}
                   />
                 </div>
               </div>
@@ -146,12 +150,12 @@ export default function DashboardPage() {
               <div className="group cursor-pointer">
                 <div className="flex justify-between text-sm text-yellow-400/80 mb-1">
                   <span>Medium</span>
-                  <span className="group-hover:text-yellow-300 transition">{stats.mediumSolved}</span>
+                  <span className="group-hover:text-yellow-300 transition">{stats.mediumSolved} / {TOTAL_MEDIUM}</span>
                 </div>
                 <div className="h-3 bg-white/10 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-yellow-500 rounded-full transition-all duration-1000 ease-out delay-200 group-hover:bg-yellow-400"
-                    style={{ width: `${(stats.mediumSolved / maxSolved) * 100}%` }}
+                    style={{ width: `${(stats.mediumSolved / TOTAL_MEDIUM) * 100}%` }}
                   />
                 </div>
               </div>
@@ -159,12 +163,12 @@ export default function DashboardPage() {
               <div className="group cursor-pointer">
                 <div className="flex justify-between text-sm text-red-400/80 mb-1">
                   <span>Hard</span>
-                  <span className="group-hover:text-red-300 transition">{stats.hardSolved}</span>
+                  <span className="group-hover:text-red-300 transition">{stats.hardSolved} / {TOTAL_HARD}</span>
                 </div>
                 <div className="h-3 bg-white/10 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-red-500 rounded-full transition-all duration-1000 ease-out delay-300 group-hover:bg-red-400"
-                    style={{ width: `${(stats.hardSolved / maxSolved) * 100}%` }}
+                    style={{ width: `${(stats.hardSolved / TOTAL_HARD) * 100}%` }}
                   />
                 </div>
               </div>
@@ -175,19 +179,19 @@ export default function DashboardPage() {
           <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 transition-all duration-700 ease-out delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <div className="bg-black/40 border border-white/10 rounded-xl p-4 backdrop-blur-md hover:border-white/30 transition cursor-pointer">
               <p className="text-white/60 text-sm">Total Solved</p>
-              <p className="text-2xl font-bold text-white mt-1">{stats.totalSolved}</p>
+              <p className="text-2xl font-bold text-white mt-1">{stats.totalSolved}<span className="text-sm font-normal text-white/50"> / {TOTAL_LEETCODE_QUESTIONS}</span></p>
             </div>
             <div className="bg-black/40 border border-green-500/20 rounded-xl p-4 backdrop-blur-md hover:border-green-500/50 transition cursor-pointer">
               <p className="text-green-400/60 text-sm">Easy</p>
-              <p className="text-2xl font-bold text-green-400 mt-1">{stats.easySolved}</p>
+              <p className="text-2xl font-bold text-green-400 mt-1">{stats.easySolved}<span className="text-sm font-normal text-green-400/50"> / {TOTAL_EASY}</span></p>
             </div>
             <div className="bg-black/40 border border-yellow-500/20 rounded-xl p-4 backdrop-blur-md hover:border-yellow-500/50 transition cursor-pointer">
               <p className="text-yellow-400/60 text-sm">Medium</p>
-              <p className="text-2xl font-bold text-yellow-400 mt-1">{stats.mediumSolved}</p>
+              <p className="text-2xl font-bold text-yellow-400 mt-1">{stats.mediumSolved}<span className="text-sm font-normal text-yellow-400/50"> / {TOTAL_MEDIUM}</span></p>
             </div>
             <div className="bg-black/40 border border-red-500/20 rounded-xl p-4 backdrop-blur-md hover:border-red-500/50 transition cursor-pointer">
               <p className="text-red-400/60 text-sm">Hard</p>
-              <p className="text-2xl font-bold text-red-400 mt-1">{stats.hardSolved}</p>
+              <p className="text-2xl font-bold text-red-400 mt-1">{stats.hardSolved}<span className="text-sm font-normal text-red-400/50"> / {TOTAL_HARD}</span></p>
             </div>
           </div>
 
