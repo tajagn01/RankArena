@@ -195,6 +195,30 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {/* Rank Box */}
+          <div className={`bg-black/40 border border-white/10 rounded-xl p-6 mb-8 backdrop-blur-md hover:border-white/30 transition-all duration-700 ease-out delay-250 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="text-center md:text-left">
+                <p className="text-white/60 text-sm">Your Rank in {user?.university}</p>
+                <p className="text-4xl font-bold text-white mt-2">
+                  #{universityUsers.findIndex(u => u.name === user?.name) + 1 || '-'}
+                  <span className="text-lg font-normal text-white/50"> / {universityUsers.length}</span>
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {universityUsers.findIndex(u => u.name === user?.name) === 0 && (
+                  <span className="px-3 py-1 bg-white/10 text-white text-sm rounded-full border border-white/20">🏆 Top Performer</span>
+                )}
+                {universityUsers.findIndex(u => u.name === user?.name) > 0 && universityUsers.findIndex(u => u.name === user?.name) <= 2 && (
+                  <span className="px-3 py-1 bg-white/10 text-white text-sm rounded-full border border-white/20">🎯 Top 3</span>
+                )}
+                {universityUsers.findIndex(u => u.name === user?.name) > 2 && (
+                  <span className="px-3 py-1 bg-white/10 text-blue-400 text-sm rounded-full border border-white/20">📈 Keep Going!</span>
+                )}
+              </div>
+            </div>
+          </div>
+
           <div className={`bg-black/40 border border-white/10 rounded-xl p-4 md:p-6 backdrop-blur-md transition-all duration-700 ease-out delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
            
             <div className="flex items-center justify-between gap-4 mb-6">
