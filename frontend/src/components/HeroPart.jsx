@@ -1,4 +1,4 @@
-import { CodeXml } from 'lucide-react';
+import { CodeXml, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 
@@ -52,6 +52,11 @@ function HeroPart() {
                     <span className="absolute inset-0 bg-blue-700 translate-y-full transition-transform duration-300 ease-out group-hover:translate-y-0 rounded-2xl"></span>
                     <span className="relative z-10">Get Started</span>
                 </button>
+
+                <div className="hero-reveal mt-16 flex flex-col items-center gap-2 opacity-0 translate-y-8 animate-bounce" style={{ transition: 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+                    <span className="text-white/50 text-sm">Scroll Down</span>
+                    <ChevronDown className="w-5 h-5 text-white/50" />
+                </div>
 
             </div>
         </>

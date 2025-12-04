@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import GridBackground from "../components/GridBackground";
+import Toast from "../components/Toast";
 import API_URL from "../config";
 
 export default function LoginPage() {
@@ -83,22 +84,14 @@ export default function LoginPage() {
   return (
     <>
       <GridBackground />
+      <Toast message={message} type="success" onClose={() => setMessage("")} />
+      <Toast message={error} type="error" onClose={() => setError("")} />
       <div className="min-h-screen flex items-center justify-center px-4">
         <form
           onSubmit={handleSubmit}
           className={`flex flex-col gap-4 p-6 md:p-8 w-full max-w-sm bg-black/40 border border-white/10 rounded-xl backdrop-blur-md transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'}`}
         >
           <h2 className="text-2xl font-bold text-white text-center">Login</h2>
-          {message && (
-            <div className="bg-white text-black text-sm text-center py-2 px-4 rounded-lg font-medium">
-              {message}
-            </div>
-          )}
-          {error && (
-            <div className="bg-white text-red-600 text-sm text-center py-2 px-4 rounded-lg font-medium">
-              {error}
-            </div>
-          )}
           <input
             type="text"
             value={name}

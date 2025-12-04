@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import GridBackground from "../components/GridBackground";
+import Toast from "../components/Toast";
 import API_URL from "../config";
 
 const universities = [
@@ -100,14 +101,14 @@ export default function SignupPage() {
   return (
     <>
       <GridBackground />
+      <Toast message={success} type="success" onClose={() => setSuccess("")} />
+      <Toast message={error} type="error" onClose={() => setError("")} />
       <div className="min-h-screen flex items-center justify-center px-4">
         <form
           onSubmit={handleSubmit}
           className={`flex flex-col gap-4 p-6 md:p-8 w-full max-w-sm bg-black/40 border border-white/10 rounded-xl backdrop-blur-md transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'}`}
         >
           <h2 className="text-2xl font-bold text-white text-center">Sign Up</h2>
-          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
-          {success && <p className="text-green-400 text-sm text-center">{success}</p>}
           <input
             type="text"
             value={name}
