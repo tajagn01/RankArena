@@ -8,6 +8,7 @@ export async function fetchLeetCodeUser(username) {
         profile {
           realName
           ranking
+          countryName
         }
         submitStats {
           acSubmissionNum {
@@ -38,10 +39,12 @@ export async function fetchLeetCodeUser(username) {
     if (!user) return null;
 
     const statsArr = user.submitStats.acSubmissionNum;
+    const country = user.profile?.countryName || null;
 
     return {
       username: user.username,
       ranking: user.profile?.ranking ?? null,
+      country: country,
       totalSolved: statsArr.find(x => x.difficulty === "All")?.count || 0,
       easySolved: statsArr.find(x => x.difficulty === "Easy")?.count || 0,
       mediumSolved: statsArr.find(x => x.difficulty === "Medium")?.count || 0,

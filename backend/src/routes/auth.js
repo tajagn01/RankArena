@@ -30,6 +30,11 @@ router.post("/signup", async (req, res) => {
       return res.status(400).json({ error: "Invalid LeetCode username. Please check and try again." });
     }
 
+    // Check if user is from India
+    if (stats.country && stats.country !== "India") {
+      return res.status(400).json({ error: "Only LeetCode accounts from India are allowed to register." });
+    }
+
     let uni = await University.findOne({ name: university });
     if (!uni) {
       uni = await University.create({ name: university });
@@ -42,6 +47,7 @@ router.post("/signup", async (req, res) => {
       password: hashed,
       university: uni._id,
       leetcodeUsername,
+      country: stats.country || "India",
       stats,
       lastProfileFetch: new Date()
     });
@@ -98,7 +104,14 @@ router.post("/university-users", async (req, res) => {
     const uni = await University.findOne({ name: university });
     if (!uni) return res.status(404).json({ error: "University not found" });
 
-    const users = await User.find({ university: uni._id });
+    const users = await User.find({ 
+      university: uni._id,
+      $or: [
+        { country: "India" },
+        { country: null },
+        { country: { $exists: false } }
+      ]
+    });
     res.json({ users });
   } catch (err) {
     res.status(500).json({ error: err.message });

@@ -13,6 +13,7 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   university: { type: mongoose.Schema.Types.ObjectId, ref: "University" },
   leetcodeUsername: { type: String, index: true },
+  country: { type: String, default: null },
   stats: { type: StatsSchema, default: () => ({}) },
   lastProfileFetch: Date,
   createdAt: { type: Date, default: Date.now }
