@@ -53,7 +53,6 @@ export async function fetchLeetCodeUser(username) {
     };
 
   } catch (err) {
-    console.error("LeetCode Fetch Error:", err.message);
     return null;
   }
 }

@@ -6,7 +6,6 @@ function HeroPart() {
     const navigate = useNavigate();
     
     useEffect(() => {
-        // Trigger animations on mount
         const timer = setTimeout(() => {
             document.querySelectorAll('.hero-reveal').forEach((el, index) => {
                 setTimeout(() => {

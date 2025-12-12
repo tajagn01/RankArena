@@ -31,7 +31,6 @@ function Card() {
 
     return (
         <div ref={containerRef} className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto mt-20 w-full px-6">
-            {/* Card 1 */}
             <div className="card-reveal group opacity-0 translate-y-12" style={{ transition: 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}>
                 <div className="relative p-8 rounded-2xl border border-white/10 hover:border-white/20 transition-all duration-500 hover:transform hover:scale-105 bg-white/5 backdrop-blur-sm h-full">
                     <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -45,7 +44,6 @@ function Card() {
                 </div>
             </div>
 
-            {/* Card 2 */}
             <div className="card-reveal group opacity-0 translate-y-12" style={{ transition: 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}>
                 <div className="relative p-8 rounded-2xl border border-white/10 hover:border-white/20 transition-all duration-500 hover:transform hover:scale-105 bg-white/5 backdrop-blur-sm h-full">
                     <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -59,7 +57,6 @@ function Card() {
                 </div>
             </div>
 
-            {/* Card 3 */}
             <div className="card-reveal group opacity-0 translate-y-12" style={{ transition: 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }}>
                 <div className="relative p-8 rounded-2xl border border-white/10 hover:border-white/20 transition-all duration-500 hover:transform hover:scale-105 bg-white/5 backdrop-blur-sm h-full">
                     <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>

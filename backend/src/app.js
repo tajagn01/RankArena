@@ -41,7 +41,6 @@ app.get("/", (req, res) => {
 });
 
 cron.schedule("0 */4 * * *", async () => {
-  console.log("Starting scheduled LeetCode stats update...");
   const users = await User.find({});
   for (const user of users) {
     try {
@@ -50,14 +49,11 @@ cron.schedule("0 */4 * * *", async () => {
         user.stats = stats;
         user.lastProfileFetch = new Date();
         await user.save();
-        console.log(`Updated stats for ${user.leetcodeUsername}`);
       }
     } catch (err) {
-      console.error(`Failed to update ${user.leetcodeUsername}:`, err.message);
     }
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
-  console.log("Scheduled LeetCode stats update complete.");
 });
 
 app.post("/api/refresh-stats", async (req, res) => {
@@ -113,5 +109,4 @@ app.post("/api/refresh-university", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}/`);
 });

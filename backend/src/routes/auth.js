@@ -30,7 +30,6 @@ router.post("/signup", async (req, res) => {
       return res.status(400).json({ error: "Invalid LeetCode username. Please check and try again." });
     }
 
-    // Check if user is from India
     if (stats.country && stats.country !== "India") {
       return res.status(400).json({ error: "Only LeetCode accounts from India are allowed to register." });
     }

@@ -1,6 +1,9 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API_URL from "../config";
+
+const CACHE_KEY = "universityUsersCache";
+const CACHE_EXPIRY = 5 * 60 * 1000;
 
 export default function DashboardPage() {
   const [user, setUser] = useState(null);
@@ -9,10 +12,63 @@ export default function DashboardPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(null);
   const [mounted, setMounted] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(10);
+  const [isFetchingBackground, setIsFetchingBackground] = useState(false);
   const navigate = useNavigate();
 
-  const fetchUniversityUsers = async (university, currentUserName) => {
+  useEffect(() => {
+    if (!mounted || loading) return;
+
+    const handleScroll = () => {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = window.innerHeight;
+      
+      if (scrollTop + clientHeight >= scrollHeight - 300) {
+        setVisibleCount(prev => {
+          if (prev < universityUsers.length) {
+            return Math.min(prev + 10, universityUsers.length);
+          }
+          return prev;
+        });
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [mounted, loading, universityUsers.length]);
+
+  const getCachedData = (university) => {
     try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { data, timestamp, uni } = JSON.parse(cached);
+        if (uni === university && Date.now() - timestamp < CACHE_EXPIRY) {
+          return data;
+        }
+      }
+    } catch (e) {}
+    return null;
+  };
+
+  const setCachedData = (university, data) => {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        data,
+        timestamp: Date.now(),
+        uni: university
+      }));
+    } catch (e) {}
+  };
+
+  const fetchUniversityUsers = async (university, currentUserName, isBackground = false) => {
+    try {
+      if (isBackground) setIsFetchingBackground(true);
+      
       const res = await fetch(`${API_URL}/api/auth/university-users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -24,6 +80,7 @@ export default function DashboardPage() {
           (a, b) => (b.stats?.totalSolved || 0) - (a.stats?.totalSolved || 0)
         );
         setUniversityUsers(sorted);
+        setCachedData(university, sorted);
         
         const foundUser = sorted.find(u => u.name === currentUserName);
         if (foundUser) {
@@ -35,6 +92,8 @@ export default function DashboardPage() {
         }
       }
     } catch (err) {
+    } finally {
+      if (isBackground) setIsFetchingBackground(false);
     }
   };
 
@@ -50,7 +109,7 @@ export default function DashboardPage() {
       });
       
       if (res.ok) {
-        await fetchUniversityUsers(user?.university, user?.name);
+        await fetchUniversityUsers(user?.university, user?.name, false);
         setLastRefresh(new Date());
       }
     } catch (err) {
@@ -68,19 +127,40 @@ export default function DashboardPage() {
     const parsedUser = JSON.parse(storedUser);
     setUser(parsedUser);
 
-    const loadData = async () => {
-      await fetchUniversityUsers(parsedUser.university, parsedUser.name);
+    const cachedData = getCachedData(parsedUser.university);
+    if (cachedData) {
+      setUniversityUsers(cachedData);
       setLoading(false);
       setTimeout(() => setMounted(true), 50);
-    };
-    
-    loadData();
+      fetchUniversityUsers(parsedUser.university, parsedUser.name, true);
+    } else {
+      const loadData = async () => {
+        await fetchUniversityUsers(parsedUser.university, parsedUser.name, false);
+        setLoading(false);
+        setTimeout(() => setMounted(true), 50);
+      };
+      loadData();
+    }
   }, [navigate]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <p className="text-white text-xl">Loading...</p>
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-4">
+        <div className="flex items-center gap-1">
+          <span 
+            className="w-3 h-3 bg-white rounded-full animate-bounce" 
+            style={{ animationDelay: '0ms', animationDuration: '600ms' }}
+          />
+          <span 
+            className="w-3 h-3 bg-white rounded-full animate-bounce" 
+            style={{ animationDelay: '150ms', animationDuration: '600ms' }}
+          />
+          <span 
+            className="w-3 h-3 bg-white rounded-full animate-bounce" 
+            style={{ animationDelay: '300ms', animationDuration: '600ms' }}
+          />
+        </div>
+        <p className="text-white/60 text-sm">Loading dashboard</p>
       </div>
     );
   }
@@ -195,7 +275,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Rank Box */}
           <div className={`bg-black/40 border border-white/10 rounded-xl p-6 mb-8 backdrop-blur-md hover:border-white/30 transition-all duration-700 ease-out delay-250 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="text-center md:text-left">
@@ -248,6 +327,15 @@ export default function DashboardPage() {
                 Last refreshed: {lastRefresh.toLocaleTimeString()}
               </p>
             )}
+
+            {isFetchingBackground && (
+              <p className="text-blue-400/60 text-xs mb-4 flex items-center gap-2">
+                <svg className="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Updating data...
+              </p>
+            )}
             
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
@@ -263,7 +351,7 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {universityUsers.map((u, index) => (
+                  {universityUsers.slice(0, visibleCount).map((u, index) => (
                     <tr
                       key={u._id || index}
                       className={`border-b border-white/5 hover:bg-white/5 transition cursor-pointer ${
@@ -311,10 +399,15 @@ export default function DashboardPage() {
                   )}
                 </tbody>
               </table>
+              {visibleCount < universityUsers.length && (
+                <div className="py-4 text-center">
+                  <p className="text-white/40 text-sm">Scroll for more...</p>
+                </div>
+              )}
             </div>
 
             <div className="md:hidden flex flex-col gap-3">
-              {universityUsers.map((u, index) => (
+              {universityUsers.slice(0, visibleCount).map((u, index) => (
                 <div
                   key={u._id || index}
                   className={`border border-white/10 rounded-lg p-4 ${
@@ -355,6 +448,11 @@ export default function DashboardPage() {
                 <p className="py-6 text-center text-white/40">
                   No users found from your university.
                 </p>
+              )}
+              {visibleCount < universityUsers.length && (
+                <div className="py-4 text-center">
+                  <p className="text-white/40 text-sm">Scroll for more...</p>
+                </div>
               )}
             </div>
           </div>

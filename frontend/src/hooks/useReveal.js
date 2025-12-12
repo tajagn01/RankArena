@@ -21,7 +21,6 @@ export function useReveal(threshold = 0.1) {
     const revealElements = element.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale, .reveal-fade');
     revealElements.forEach((el) => observer.observe(el));
 
-    // Also observe the container itself if it has reveal class
     if (element.classList.contains('reveal') || 
         element.classList.contains('reveal-left') || 
         element.classList.contains('reveal-right') ||
