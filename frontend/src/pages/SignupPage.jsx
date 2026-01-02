@@ -5,10 +5,16 @@ import Toast from "../components/Toast";
 import API_URL from "../config";
 
 const universities = [
-  "Parul University",
-  "Nirma University, Ahmedabad",
+  "Indian Institute of Technology Gandhinagar",
+  "Dhirubhai Ambani Institute of Information and Communication Technology",
+  "Nirma University",
+  "Gujarat University",
   "Maharaja Sayajirao University of Baroda",
-  "Gujarat University, Ahmedabad"
+  "Sardar Vallabhbhai National Institute of Technology",
+  "Dharmsinh Desai University",
+  "Pandit Deendayal Energy University",
+  "Gujarat Technological University",
+  "Parul University"
 ];
 
 export default function SignupPage() {
@@ -57,7 +63,7 @@ export default function SignupPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Signup failed");
       
-      setSuccess("Signup successful! Redirecting to login...");
+      setSuccess("Registration successful! Redirecting to login...");
       setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
       setError(err.message);
@@ -108,7 +114,8 @@ export default function SignupPage() {
           onSubmit={handleSubmit}
           className={`flex flex-col gap-4 p-6 md:p-8 w-full max-w-sm bg-black/40 border border-white/10 rounded-xl backdrop-blur-md transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'}`}
         >
-          <h2 className="text-2xl font-bold text-white text-center">Sign Up</h2>
+          <h2 className="text-2xl font-bold text-white text-center">Register</h2>
+          <p className="text-white/60 text-sm text-center mt-1">Friend and Compete || RankArena</p>
           <input
             type="text"
             value={name}
@@ -184,7 +191,7 @@ export default function SignupPage() {
             disabled={loading}
             className="w-full py-2 rounded-lg bg-white text-black font-semibold hover:bg-white/90 transition disabled:opacity-50"
           >
-            {loading ? "Signing up..." : "Sign Up"}
+            {loading ? "Registering..." : "Register"}
           </button>
           <p className="text-white/60 text-sm text-center mt-2">
             Already have an account?{" "}
