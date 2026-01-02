@@ -115,7 +115,7 @@ export default function SignupPage() {
           className={`flex flex-col gap-4 p-6 md:p-8 w-full max-w-sm bg-black/40 border border-white/10 rounded-xl backdrop-blur-md transition-all duration-700 ease-out ${mounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'}`}
         >
           <h2 className="text-2xl font-bold text-white text-center">Register</h2>
-          <p className="text-white/60 text-sm text-center mt-1">Friend and Compete || RankArena</p>
+          <p className="text-white/60 text-sm text-center mt-1">Challenge a Friend. Compare Your Batters || RankArena</p>
           <input
             type="text"
             value={name}
