@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import API_URL from "../config";
 
 const CACHE_KEY = "universityUsersCache";
-const CACHE_EXPIRY = 5 * 60 * 1000;
+const CACHE_EXPIRY = 30 * 60 * 1000; // 30 minutes
 
 export default function DashboardPage() {
   const [user, setUser] = useState(null);
