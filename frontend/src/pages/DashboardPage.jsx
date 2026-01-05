@@ -7,13 +7,86 @@ import API_URL from "../config";
 // ═══════════════════════════════════════════════════════════════════════════════
 const CACHE_KEY = "universityUsersCache";
 const CACHE_EXPIRY = 30 * 60 * 1000; // 30 minutes
-const TOTAL_LEETCODE_QUESTIONS = 3768;
-const TOTAL_EASY = 915;
-const TOTAL_MEDIUM = 1960;
-const TOTAL_HARD = 888;
+const LEETCODE_TOTALS_CACHE_KEY = "leetcodeTotals";
+const LEETCODE_TOTALS_CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours (updates weekly anyway)
+
+// Fallback values (updated Jan 2026) - only used if API fails
+const DEFAULT_TOTALS = {
+  total: 3768,
+  easy: 915,
+  medium: 1960,
+  hard: 888,
+};
+
 const INITIAL_VISIBLE = 10;
 const LOAD_MORE_COUNT = 10;
 const SCROLL_THRESHOLD = 300;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LEETCODE TOTALS FETCHER
+// ═══════════════════════════════════════════════════════════════════════════════
+const getLeetCodeTotals = async () => {
+  // Check cache first
+  try {
+    const cached = localStorage.getItem(LEETCODE_TOTALS_CACHE_KEY);
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < LEETCODE_TOTALS_CACHE_EXPIRY) {
+        return data;
+      }
+    }
+  } catch {}
+
+  // Fetch from LeetCode GraphQL API
+  try {
+    const response = await fetch('https://leetcode.com/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: `
+          query problemsetQuestionList {
+            problemsetQuestionList: questionList(
+              categorySlug: ""
+              limit: 1
+              skip: 0
+              filters: {}
+            ) {
+              total: totalNum
+            }
+            allQuestionsCount {
+              difficulty
+              count
+            }
+          }
+        `
+      }),
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      const counts = result?.data?.allQuestionsCount || [];
+      
+      const totals = {
+        total: result?.data?.problemsetQuestionList?.total || DEFAULT_TOTALS.total,
+        easy: counts.find(c => c.difficulty === 'Easy')?.count || DEFAULT_TOTALS.easy,
+        medium: counts.find(c => c.difficulty === 'Medium')?.count || DEFAULT_TOTALS.medium,
+        hard: counts.find(c => c.difficulty === 'Hard')?.count || DEFAULT_TOTALS.hard,
+      };
+
+      // Cache the result
+      localStorage.setItem(LEETCODE_TOTALS_CACHE_KEY, JSON.stringify({
+        data: totals,
+        timestamp: Date.now(),
+      }));
+
+      return totals;
+    }
+  } catch (err) {
+    console.warn('Failed to fetch LeetCode totals, using defaults:', err);
+  }
+
+  return DEFAULT_TOTALS;
+};
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CACHE UTILITIES
@@ -280,6 +353,7 @@ export default function DashboardPage() {
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE);
   const [isFetchingBackground, setIsFetchingBackground] = useState(false);
   const [dataFetchedAt, setDataFetchedAt] = useState(null);
+  const [leetcodeTotals, setLeetcodeTotals] = useState(DEFAULT_TOTALS);
   
   const navigate = useNavigate();
   
@@ -421,6 +495,13 @@ export default function DashboardPage() {
     isMountedRef.current = true;
     
     const initDashboard = async () => {
+      // Fetch LeetCode totals (runs in parallel)
+      getLeetCodeTotals().then(totals => {
+        if (isMountedRef.current) {
+          setLeetcodeTotals(totals);
+        }
+      });
+
       // Check authentication
       let storedUser;
       try {
@@ -570,7 +651,7 @@ export default function DashboardPage() {
             <ProgressBar 
               label="Total Solved" 
               solved={stats.totalSolved} 
-              total={TOTAL_LEETCODE_QUESTIONS}
+              total={leetcodeTotals.total}
               colorClass="text-white/80"
               bgClass="bg-white"
               delay={0}
@@ -578,7 +659,7 @@ export default function DashboardPage() {
             <ProgressBar 
               label="Easy" 
               solved={stats.easySolved} 
-              total={TOTAL_EASY}
+              total={leetcodeTotals.easy}
               colorClass="text-green-400/80"
               bgClass="bg-green-500"
               delay={100}
@@ -586,7 +667,7 @@ export default function DashboardPage() {
             <ProgressBar 
               label="Medium" 
               solved={stats.mediumSolved} 
-              total={TOTAL_MEDIUM}
+              total={leetcodeTotals.medium}
               colorClass="text-yellow-400/80"
               bgClass="bg-yellow-500"
               delay={200}
@@ -594,7 +675,7 @@ export default function DashboardPage() {
             <ProgressBar 
               label="Hard" 
               solved={stats.hardSolved} 
-              total={TOTAL_HARD}
+              total={leetcodeTotals.hard}
               colorClass="text-red-400/80"
               bgClass="bg-red-500"
               delay={300}
@@ -606,10 +687,10 @@ export default function DashboardPage() {
         {/* STATS CARDS GRID */}
         {/* ═══════════════════════════════════════════════════════════════════ */}
         <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 transition-all duration-700 ease-out delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <StatCard label="Total Solved" solved={stats.totalSolved} total={TOTAL_LEETCODE_QUESTIONS} colorClass="text-white" borderClass="border-white/10 hover:border-white/30" />
-          <StatCard label="Easy" solved={stats.easySolved} total={TOTAL_EASY} colorClass="text-green-400" borderClass="border-green-500/20 hover:border-green-500/50" />
-          <StatCard label="Medium" solved={stats.mediumSolved} total={TOTAL_MEDIUM} colorClass="text-yellow-400" borderClass="border-yellow-500/20 hover:border-yellow-500/50" />
-          <StatCard label="Hard" solved={stats.hardSolved} total={TOTAL_HARD} colorClass="text-red-400" borderClass="border-red-500/20 hover:border-red-500/50" />
+          <StatCard label="Total Solved" solved={stats.totalSolved} total={leetcodeTotals.total} colorClass="text-white" borderClass="border-white/10 hover:border-white/30" />
+          <StatCard label="Easy" solved={stats.easySolved} total={leetcodeTotals.easy} colorClass="text-green-400" borderClass="border-green-500/20 hover:border-green-500/50" />
+          <StatCard label="Medium" solved={stats.mediumSolved} total={leetcodeTotals.medium} colorClass="text-yellow-400" borderClass="border-yellow-500/20 hover:border-yellow-500/50" />
+          <StatCard label="Hard" solved={stats.hardSolved} total={leetcodeTotals.hard} colorClass="text-red-400" borderClass="border-red-500/20 hover:border-red-500/50" />
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════════ */}
