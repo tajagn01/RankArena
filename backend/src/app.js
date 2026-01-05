@@ -5,7 +5,7 @@ import authRoutes from "./routes/auth.js";
 import cors from "cors";
 import cron from "node-cron";
 import User from "./models/user.js";
-import { fetchLeetCodeUser } from "./services/leetcode.service.js";
+import { fetchLeetCodeUser, fetchLeetCodeTotals } from "./services/leetcode.service.js";
 
 
 dotenv.config();
@@ -108,5 +108,15 @@ app.post("/api/refresh-university", async (req, res) => {
   }
 });
 
+app.get("/api/leetcode/totals", async (req, res) => {
+  try {
+    const totals = await fetchLeetCodeTotals();
+    res.json(totals);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
 });

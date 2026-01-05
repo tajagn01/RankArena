@@ -99,3 +99,74 @@ export async function fetchLeetCodeUser(username) {
     return null;
   }
 }
+
+export async function fetchLeetCodeTotals() {
+  const cacheKey = "leetcode:totals";
+  
+  try {
+    // Check cache first
+    const cached = await safeRedisGet(cacheKey);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+  } catch (err) {
+    // Continue if cache fails
+  }
+
+  const QUERY = `
+    query globalData {
+      allQuestionsCount {
+        difficulty
+        count
+      }
+    }
+  `;
+
+  try {
+    const response = await axios.post(
+      "https://leetcode.com/graphql",
+      { query: QUERY },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": "Mozilla/5.0 RankArena"
+        }
+      }
+    );
+
+    const allQuestionsCount = response.data?.data?.allQuestionsCount || [];
+    
+    // Calculate total from difficulty counts
+    const total = allQuestionsCount.reduce((sum, c) => sum + c.count, 0);
+    
+    const data = {
+      total: total || 3768,
+      easy: allQuestionsCount.find(c => c.difficulty === "Easy")?.count || 915,
+      medium: allQuestionsCount.find(c => c.difficulty === "Medium")?.count || 1960,
+      hard: allQuestionsCount.find(c => c.difficulty === "Hard")?.count || 888,
+      lastUpdated: new Date()
+    };
+
+    console.log('Fetched LeetCode totals:', data);
+
+    // Cache the result for 24 hours (86400 seconds)
+    try {
+      await safeRedisSet(cacheKey, JSON.stringify(data), 86400);
+    } catch (err) {
+      // Continue if caching fails
+    }
+
+    return data;
+
+  } catch (err) {
+    console.warn('Failed to fetch LeetCode totals:', err.message);
+    // Return default fallback
+    return {
+      total: 3768,
+      easy: 915,
+      medium: 1960,
+      hard: 888,
+      lastUpdated: new Date()
+    };
+  }
+}

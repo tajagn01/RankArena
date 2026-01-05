@@ -25,7 +25,7 @@ const LOAD_MORE_COUNT = 10;
 const SCROLL_THRESHOLD = 300;
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// LEETCODE TOTALS FETCHER
+// LEETCODE TOTALS FETCHER (via backend to avoid CORS)
 // ═══════════════════════════════════════════════════════════════════════════════
 const getLeetCodeTotals = async () => {
   // Check cache first
@@ -39,40 +39,21 @@ const getLeetCodeTotals = async () => {
     }
   } catch {}
 
-  // Fetch from LeetCode GraphQL API
+  // Fetch from backend endpoint (backend fetches from LeetCode to avoid CORS)
   try {
-    const response = await fetch('https://leetcode.com/graphql', {
-      method: 'POST',
+    const response = await fetch(`${API_URL}/api/leetcode/totals`, {
+      method: 'GET',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: `
-          query problemsetQuestionList {
-            problemsetQuestionList: questionList(
-              categorySlug: ""
-              limit: 1
-              skip: 0
-              filters: {}
-            ) {
-              total: totalNum
-            }
-            allQuestionsCount {
-              difficulty
-              count
-            }
-          }
-        `
-      }),
     });
 
     if (response.ok) {
       const result = await response.json();
-      const counts = result?.data?.allQuestionsCount || [];
       
       const totals = {
-        total: result?.data?.problemsetQuestionList?.total || DEFAULT_TOTALS.total,
-        easy: counts.find(c => c.difficulty === 'Easy')?.count || DEFAULT_TOTALS.easy,
-        medium: counts.find(c => c.difficulty === 'Medium')?.count || DEFAULT_TOTALS.medium,
-        hard: counts.find(c => c.difficulty === 'Hard')?.count || DEFAULT_TOTALS.hard,
+        total: result?.total || DEFAULT_TOTALS.total,
+        easy: result?.easy || DEFAULT_TOTALS.easy,
+        medium: result?.medium || DEFAULT_TOTALS.medium,
+        hard: result?.hard || DEFAULT_TOTALS.hard,
       };
 
       // Cache the result
@@ -84,7 +65,7 @@ const getLeetCodeTotals = async () => {
       return totals;
     }
   } catch (err) {
-    console.warn('Failed to fetch LeetCode totals, using defaults:', err);
+    console.warn('Failed to fetch LeetCode totals from backend, using defaults:', err);
   }
 
   return DEFAULT_TOTALS;
