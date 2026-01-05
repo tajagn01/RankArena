@@ -3,12 +3,31 @@ import { createRedisConnection } from "../config/redis.js";
 
 const redis = createRedisConnection(process.env.REDIS_URL || "redis://localhost:6379");
 
+// Helper to safely use Redis (returns null if Redis unavailable)
+async function safeRedisGet(key) {
+  if (redis.status !== 'ready') return null;
+  try {
+    return await redis.get(key);
+  } catch (err) {
+    return null;
+  }
+}
+
+async function safeRedisSet(key, value, ttl) {
+  if (redis.status !== 'ready') return;
+  try {
+    await redis.setex(key, ttl, value);
+  } catch (err) {
+    // Silent fail - caching is optional
+  }
+}
+
 export async function fetchLeetCodeUser(username) {
   const cacheKey = `leetcode:${username}`;
 
   try {
     // Check cache first
-    const cached = await redis.get(cacheKey);
+    const cached = await safeRedisGet(cacheKey);
     if (cached) {
       return JSON.parse(cached);
     }
@@ -69,7 +88,7 @@ export async function fetchLeetCodeUser(username) {
 
     // Cache the result for 24 hours (86400 seconds)
     try {
-      await redis.setex(cacheKey, 86400, JSON.stringify(data));
+      await safeRedisSet(cacheKey, JSON.stringify(data), 86400);
     } catch (err) {
       // Continue if caching fails
     }
