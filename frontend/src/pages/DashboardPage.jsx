@@ -9,6 +9,8 @@ const CACHE_KEY = "universityUsersCache";
 const CACHE_EXPIRY = 30 * 60 * 1000; // 30 minutes
 const LEETCODE_TOTALS_CACHE_KEY = "leetcodeTotals";
 const LEETCODE_TOTALS_CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours (updates weekly anyway)
+const AUTO_REFRESH_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
+const LAST_AUTO_REFRESH_KEY = "lastAutoRefresh";
 
 // Fallback values (updated Jan 2026) - only used if API fails
 const DEFAULT_TOTALS = {
@@ -471,6 +473,8 @@ export default function DashboardPage() {
       if (res.ok) {
         await fetchUniversityUsers(user.university, user.name, false);
         setLastRefresh(new Date());
+        // Mark auto-refresh timestamp
+        localStorage.setItem(LAST_AUTO_REFRESH_KEY, Date.now().toString());
       }
     } catch (err) {
       console.error('Refresh error:', err);
@@ -556,12 +560,49 @@ export default function DashboardPage() {
     
     initDashboard();
     
+    // Set up auto-refresh every 24 hours
+    const checkAutoRefresh = () => {
+      try {
+        const lastRefreshTime = localStorage.getItem(LAST_AUTO_REFRESH_KEY);
+        const now = Date.now();
+        
+        if (!lastRefreshTime) {
+          // First time, mark it
+          localStorage.setItem(LAST_AUTO_REFRESH_KEY, now.toString());
+          return;
+        }
+        
+        const timeSinceLastRefresh = now - parseInt(lastRefreshTime);
+        
+        // If 24 hours have passed, trigger auto-refresh
+        if (timeSinceLastRefresh >= AUTO_REFRESH_INTERVAL) {
+          const storedUser = localStorage.getItem("user");
+          if (storedUser) {
+            const user = JSON.parse(storedUser);
+            // Trigger background refresh silently
+            fetch(`${API_URL}/api/refresh-university`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ university: user.university }),
+            }).catch(err => console.error('Auto-refresh failed:', err));
+          }
+          localStorage.setItem(LAST_AUTO_REFRESH_KEY, now.toString());
+        }
+      } catch (err) {
+        console.error('Auto-refresh check failed:', err);
+      }
+    };
+    
+    checkAutoRefresh();
+    const autoRefreshInterval = setInterval(checkAutoRefresh, 60 * 60 * 1000); // Check every hour
+    
     // Cleanup
     return () => {
       isMountedRef.current = false;
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
+      clearInterval(autoRefreshInterval);
     };
   }, [navigate, fetchUniversityUsers]);
 
