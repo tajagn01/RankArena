@@ -132,6 +132,13 @@ app.post("/api/refresh-university", async (req, res) => {
 
 app.get("/api/leetcode/totals", async (req, res) => {
   try {
+    // Set cache control headers to prevent browser caching
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
+    
     const totals = await fetchLeetCodeTotals();
     res.json(totals);
   } catch (err) {

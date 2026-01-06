@@ -7,12 +7,12 @@ import API_URL from "../config";
 // ═══════════════════════════════════════════════════════════════════════════════
 const CACHE_KEY = "universityUsersCache";
 const CACHE_EXPIRY = 30 * 60 * 1000; // 30 minutes
-const LEETCODE_TOTALS_CACHE_KEY = "leetcodeTotals";
-const LEETCODE_TOTALS_CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours (updates weekly anyway)
+const LEETCODE_TOTALS_CACHE_KEY = "leetcodeTotals_v2"; // Changed key to force refresh
+const LEETCODE_TOTALS_CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
 const AUTO_REFRESH_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
 const LAST_AUTO_REFRESH_KEY = "lastAutoRefresh";
 
-// Fallback values (updated Jan 2026) - only used if API fails
+// Fallback values (updated Jan 6, 2026) - only used if API fails
 const DEFAULT_TOTALS = {
   total: 3802,
   easy: 921,
@@ -43,7 +43,11 @@ const getLeetCodeTotals = async () => {
   try {
     const response = await fetch(`${API_URL}/api/leetcode/totals`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      },
     });
 
     if (response.ok) {
@@ -379,7 +383,11 @@ export default function DashboardPage() {
     try {
       const res = await fetch(`${API_URL}/api/auth/university-users`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Pragma": "no-cache"
+        },
         body: JSON.stringify({ university }),
         signal: abortControllerRef.current.signal,
       });
