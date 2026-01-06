@@ -26,10 +26,12 @@ export async function fetchLeetCodeUser(username) {
   const cacheKey = `leetcode:${username}`;
 
   try {
-    // Check cache first
+    // Check cache first (cache lasts 4 hours)
     const cached = await safeRedisGet(cacheKey);
     if (cached) {
-      return JSON.parse(cached);
+      const data = JSON.parse(cached);
+      console.log(`📦 Cache hit for user: ${username}`);
+      return data;
     }
   } catch (err) {
     // Continue if cache fails
@@ -86,9 +88,11 @@ export async function fetchLeetCodeUser(username) {
       lastUpdated: new Date()
     };
 
-    // Cache the result for 24 hours (86400 seconds)
+    console.log(`✅ Fetched LeetCode user: ${username} - Solved: ${data.totalSolved}`);
+
+    // Cache the result for 4 hours (14400 seconds)
     try {
-      await safeRedisSet(cacheKey, JSON.stringify(data), 86400);
+      await safeRedisSet(cacheKey, JSON.stringify(data), 14400);
     } catch (err) {
       // Continue if caching fails
     }
@@ -104,10 +108,12 @@ export async function fetchLeetCodeTotals() {
   const cacheKey = "leetcode:totals";
   
   try {
-    // Check cache first
+    // Check cache first (cache lasts 24 hours)
     const cached = await safeRedisGet(cacheKey);
     if (cached) {
-      return JSON.parse(cached);
+      const data = JSON.parse(cached);
+      console.log(`📦 Cache hit for LeetCode totals`);
+      return data;
     }
   } catch (err) {
     // Continue if cache fails
@@ -136,14 +142,19 @@ export async function fetchLeetCodeTotals() {
 
     const allQuestionsCount = response.data?.data?.allQuestionsCount || [];
     
-    // Calculate total from difficulty counts
-    const total = allQuestionsCount.reduce((sum, c) => sum + c.count, 0);
+    // Extract counts for each difficulty
+    const easyCount = allQuestionsCount.find(c => c.difficulty === "Easy")?.count || 0;
+    const mediumCount = allQuestionsCount.find(c => c.difficulty === "Medium")?.count || 0;
+    const hardCount = allQuestionsCount.find(c => c.difficulty === "Hard")?.count || 0;
+    
+    // Calculate total from Easy + Medium + Hard (not including "All" to avoid duplication)
+    const total = easyCount + mediumCount + hardCount;
     
     const data = {
-      total: total || 3768,
-      easy: allQuestionsCount.find(c => c.difficulty === "Easy")?.count || 915,
-      medium: allQuestionsCount.find(c => c.difficulty === "Medium")?.count || 1960,
-      hard: allQuestionsCount.find(c => c.difficulty === "Hard")?.count || 888,
+      total: total || 3802,
+      easy: easyCount || 921,
+      medium: mediumCount || 1982,
+      hard: hardCount || 899,
       lastUpdated: new Date()
     };
 
@@ -160,12 +171,12 @@ export async function fetchLeetCodeTotals() {
 
   } catch (err) {
     console.warn('Failed to fetch LeetCode totals:', err.message);
-    // Return default fallback
+    // Return default fallback (as of Jan 2026)
     return {
-      total: 3768,
-      easy: 915,
-      medium: 1960,
-      hard: 888,
+      total: 3802,
+      easy: 921,
+      medium: 1982,
+      hard: 899,
       lastUpdated: new Date()
     };
   }

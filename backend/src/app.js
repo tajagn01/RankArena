@@ -40,19 +40,41 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
+// Update user solved questions every 4 hours
 cron.schedule("0 */4 * * *", async () => {
-  const users = await User.find({});
-  for (const user of users) {
-    try {
-      const stats = await fetchLeetCodeUser(user.leetcodeUsername);
-      if (stats) {
-        user.stats = stats;
-        user.lastProfileFetch = new Date();
-        await user.save();
+  console.log("🔄 Cron: Starting user stats update (runs every 4 hours)");
+  try {
+    const users = await User.find({});
+    console.log(`📊 Updating stats for ${users.length} users`);
+    
+    for (const user of users) {
+      try {
+        const stats = await fetchLeetCodeUser(user.leetcodeUsername);
+        if (stats) {
+          user.stats = stats;
+          user.lastProfileFetch = new Date();
+          await user.save();
+          console.log(`✅ Updated: ${user.name} (${user.leetcodeUsername})`);
+        }
+      } catch (err) {
+        console.error(`❌ Failed to update ${user.name}:`, err.message);
       }
-    } catch (err) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log("✅ Cron: User stats update completed");
+  } catch (err) {
+    console.error("❌ Cron: User stats update failed:", err.message);
+  }
+});
+
+// Update LeetCode total questions every 24 hours
+cron.schedule("0 0 * * *", async () => {
+  console.log("🔄 Cron: Updating LeetCode total questions (runs daily at midnight)");
+  try {
+    const totals = await fetchLeetCodeTotals();
+    console.log("✅ Cron: LeetCode totals updated:", totals);
+  } catch (err) {
+    console.error("❌ Cron: Failed to update LeetCode totals:", err.message);
   }
 });
 

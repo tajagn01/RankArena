@@ -14,10 +14,10 @@ const LAST_AUTO_REFRESH_KEY = "lastAutoRefresh";
 
 // Fallback values (updated Jan 2026) - only used if API fails
 const DEFAULT_TOTALS = {
-  total: 3768,
-  easy: 915,
-  medium: 1960,
-  hard: 888,
+  total: 3802,
+  easy: 921,
+  medium: 1982,
+  hard: 899,
 };
 
 const INITIAL_VISIBLE = 10;
@@ -362,6 +362,8 @@ export default function DashboardPage() {
   const fetchUniversityUsers = useCallback(async (university, currentUserName, isBackground = false) => {
     if (!university || fetchInProgressRef.current) return;
     
+    console.log(`🔍 Fetching users for university: "${university}"`);
+    
     // Cancel any pending request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -382,11 +384,16 @@ export default function DashboardPage() {
         signal: abortControllerRef.current.signal,
       });
       
+      console.log(`📡 API Response Status: ${res.status}`);
+      
       if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
+        const errorData = await res.json().catch(() => ({}));
+        console.error(`❌ API Error:`, errorData);
+        throw new Error(errorData.error || `HTTP ${res.status}`);
       }
       
       const data = await res.json();
+      console.log(`📦 API Response:`, data);
       
       if (!isMountedRef.current) return;
       
@@ -394,6 +401,13 @@ export default function DashboardPage() {
       const users = Array.isArray(data) ? data 
         : Array.isArray(data?.users) ? data.users 
         : [];
+      
+      console.log(`👥 Users found: ${users.length}`);
+      
+      if (users.length === 0) {
+        console.warn(`⚠️ No users found for university: "${university}"`);
+        console.warn(`💡 Tip: Make sure the university name exactly matches the database`);
+      }
       
       // Sort by total solved
       const sorted = [...users].sort(
@@ -492,16 +506,21 @@ export default function DashboardPage() {
       try {
         const stored = localStorage.getItem("user");
         if (!stored) {
+          console.log("❌ No user in localStorage, redirecting to login");
           navigate("/login");
           return;
         }
         storedUser = JSON.parse(stored);
-      } catch {
+        console.log("✅ User loaded from localStorage:", storedUser);
+        console.log(`📍 University: "${storedUser.university}"`);
+      } catch (err) {
+        console.error("❌ Failed to parse user data:", err);
         navigate("/login");
         return;
       }
       
       if (!storedUser?.university) {
+        console.error("❌ User has no university set!");
         navigate("/login");
         return;
       }

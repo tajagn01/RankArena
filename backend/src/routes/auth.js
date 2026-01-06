@@ -100,8 +100,18 @@ router.post("/login", async (req, res) => {
 router.post("/university-users", async (req, res) => {
   const { university } = req.body;
   try {
+    console.log(`📍 Searching for university: "${university}"`);
+    
     const uni = await University.findOne({ name: university });
-    if (!uni) return res.status(404).json({ error: "University not found" });
+    if (!uni) {
+      console.log(`❌ University not found: "${university}"`);
+      console.log(`Available universities:`);
+      const allUnis = await University.find({});
+      allUnis.forEach(u => console.log(`   - "${u.name}"`));
+      return res.status(404).json({ error: "University not found" });
+    }
+
+    console.log(`✅ Found university: ${uni.name} (ID: ${uni._id})`);
 
     const users = await User.find({ 
       university: uni._id,
@@ -111,8 +121,11 @@ router.post("/university-users", async (req, res) => {
         { country: { $exists: false } }
       ]
     });
+    
+    console.log(`📊 Found ${users.length} users from ${university}`);
     res.json({ users });
   } catch (err) {
+    console.error(`❌ Error fetching university users:`, err.message);
     res.status(500).json({ error: err.message });
   }
 });
