@@ -60,18 +60,37 @@ export default function SignupPage() {
     setError("");
     setSuccess("");
     try {
+      console.log('🚀 Sending OTP request to:', `${API_URL}/api/auth/send-otp`);
+      console.log('📦 Request data:', { name, email, university, leetcodeUsername });
+
+      // Add timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
       const res = await fetch(`${API_URL}/api/auth/send-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, university, leetcodeUsername })
+        body: JSON.stringify({ name, email, password, university, leetcodeUsername }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
+      console.log('📡 Response status:', res.status);
+
       const data = await res.json();
+      console.log('📦 Response data:', data);
+
       if (!res.ok) throw new Error(data.error || "Failed to send OTP");
 
       setSuccess("OTP sent to your email!");
       setStep("otp");
     } catch (err) {
-      setError(err.message);
+      console.error('❌ Send OTP error:', err);
+      if (err.name === 'AbortError') {
+        setError('Request timed out. Please check your internet connection and try again.');
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
