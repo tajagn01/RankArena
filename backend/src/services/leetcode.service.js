@@ -69,7 +69,8 @@ export async function fetchLeetCodeUser(username) {
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
           "Referer": "https://leetcode.com/",
           "Origin": "https://leetcode.com"
-        }
+        },
+        timeout: 10000 // 10 second timeout
       }
     );
 

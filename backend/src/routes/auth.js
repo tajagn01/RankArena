@@ -39,7 +39,19 @@ router.post("/send-otp", async (req, res) => {
     }
 
     console.log(`Fetching LeetCode stats for: ${leetcodeUsername}`);
-    const stats = await fetchLeetCodeUser(leetcodeUsername);
+    let stats;
+    try {
+      stats = await fetchLeetCodeUser(leetcodeUsername);
+    } catch (err) {
+      console.error(`LeetCode fetch error for '${leetcodeUsername}':`, err.message);
+      if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+        return res.status(503).json({
+          error: "LeetCode is currently slow or unavailable. Please try again in a few moments."
+        });
+      }
+      // Re-throw other errors to be handled below
+      throw err;
+    }
 
     // fetchLeetCodeUser now throws on network error, so if we get here and it's null, 
     // it simply means the user was not found or the GraphQL query returned no match.
