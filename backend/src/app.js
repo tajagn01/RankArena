@@ -18,7 +18,7 @@ const allowedOrigins = [
 ].filter(Boolean);
 
 app.use(cors({
-  origin: function(origin, callback) {
+  origin: function (origin, callback) {
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
@@ -46,7 +46,7 @@ cron.schedule("0 */4 * * *", async () => {
   try {
     const users = await User.find({});
     console.log(`📊 Updating stats for ${users.length} users`);
-    
+
     for (const user of users) {
       try {
         const stats = await fetchLeetCodeUser(user.leetcodeUsername);
@@ -112,14 +112,20 @@ app.post("/api/refresh-university", async (req, res) => {
     const results = [];
 
     for (const user of users) {
-      const stats = await fetchLeetCodeUser(user.leetcodeUsername);
-      if (stats) {
-        user.stats = stats;
-        user.lastProfileFetch = new Date();
-        await user.save();
-        results.push({ name: user.name, updated: true, stats });
-      } else {
-        results.push({ name: user.name, updated: false });
+      try {
+        const stats = await fetchLeetCodeUser(user.leetcodeUsername);
+        if (stats) {
+          user.stats = stats;
+          user.lastProfileFetch = new Date();
+          await user.save();
+          results.push({ name: user.name, updated: true, stats });
+        } else {
+          // stats is null (user not found)
+          results.push({ name: user.name, updated: false, error: "User not found" });
+        }
+      } catch (err) {
+        console.error(`Failed to refresh ${user.name}:`, err.message);
+        results.push({ name: user.name, updated: false, error: err.message });
       }
       await new Promise(resolve => setTimeout(resolve, 500));
     }
@@ -138,7 +144,7 @@ app.get("/api/leetcode/totals", async (req, res) => {
       'Pragma': 'no-cache',
       'Expires': '0'
     });
-    
+
     const totals = await fetchLeetCodeTotals();
     res.json(totals);
   } catch (err) {

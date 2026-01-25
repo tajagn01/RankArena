@@ -66,7 +66,9 @@ export async function fetchLeetCodeUser(username) {
       {
         headers: {
           "Content-Type": "application/json",
-          "User-Agent": "Mozilla/5.0 RankArena"
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          "Referer": "https://leetcode.com/",
+          "Origin": "https://leetcode.com"
         }
       }
     );
@@ -100,13 +102,19 @@ export async function fetchLeetCodeUser(username) {
     return data;
 
   } catch (err) {
-    return null;
+    console.error("❌ LeetCode fetch failed:", err.message);
+    if (err.response) {
+      console.error("Response data:", err.response.data);
+      console.error("Response status:", err.response.status);
+      throw new Error(`LeetCode Blocked or Error: ${err.response.status} - ${JSON.stringify(err.response.data)}`);
+    }
+    throw err;
   }
 }
 
 export async function fetchLeetCodeTotals() {
   const cacheKey = "leetcode:totals";
-  
+
   try {
     // Check cache first (cache lasts 24 hours)
     const cached = await safeRedisGet(cacheKey);
@@ -141,15 +149,15 @@ export async function fetchLeetCodeTotals() {
     );
 
     const allQuestionsCount = response.data?.data?.allQuestionsCount || [];
-    
+
     // Extract counts for each difficulty
     const easyCount = allQuestionsCount.find(c => c.difficulty === "Easy")?.count || 0;
     const mediumCount = allQuestionsCount.find(c => c.difficulty === "Medium")?.count || 0;
     const hardCount = allQuestionsCount.find(c => c.difficulty === "Hard")?.count || 0;
-    
+
     // Calculate total from Easy + Medium + Hard (not including "All" to avoid duplication)
     const total = easyCount + mediumCount + hardCount;
-    
+
     const data = {
       total: total || 3802,
       easy: easyCount || 921,

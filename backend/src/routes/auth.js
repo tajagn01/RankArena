@@ -39,9 +39,12 @@ router.post("/send-otp", async (req, res) => {
 
     console.log(`Fetching LeetCode stats for: ${leetcodeUsername}`);
     const stats = await fetchLeetCodeUser(leetcodeUsername);
+
+    // fetchLeetCodeUser now throws on network error, so if we get here and it's null, 
+    // it simply means the user was not found or the GraphQL query returned no match.
     if (!stats) {
-      console.log(`Validation failed: Invalid LeetCode username '${leetcodeUsername}' or fetch failed`);
-      return res.status(400).json({ error: "Invalid LeetCode username. Please check and try again." });
+      console.log(`Validation failed: LeetCode user '${leetcodeUsername}' not found`);
+      return res.status(400).json({ error: "LeetCode username not found. Please check spelling." });
     }
 
     if (stats.country && stats.country !== "India") {
