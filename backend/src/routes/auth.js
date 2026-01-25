@@ -45,12 +45,12 @@ router.post("/send-otp", async (req, res) => {
     } catch (err) {
       console.error(`LeetCode fetch error for '${leetcodeUsername}':`, err.message);
       if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
-        return res.status(503).json({
-          error: "LeetCode is currently slow or unavailable. Please try again in a few moments."
-        });
+        console.log(`⚠️ LeetCode timeout - using default stats`);
+        stats = { totalSolved: 0, easySolved: 0, mediumSolved: 0, hardSolved: 0, country: null, lastUpdated: new Date() };
+      } else {
+        // Re-throw other errors to be handled below
+        throw err;
       }
-      // Re-throw other errors to be handled below
-      throw err;
     }
 
     // fetchLeetCodeUser now throws on network error, so if we get here and it's null, 
