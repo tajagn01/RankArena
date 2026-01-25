@@ -5,7 +5,7 @@ import API_URL from "../config";
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════════════════════
-const CACHE_KEY = "universityUsersCache";
+const CACHE_KEY = "universityUsersCache_v4_fixed";
 const CACHE_EXPIRY = 30 * 60 * 1000; // 30 minutes
 const LEETCODE_TOTALS_CACHE_KEY = "leetcodeTotals_v2"; // Changed key to force refresh
 const LEETCODE_TOTALS_CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
@@ -403,6 +403,13 @@ export default function DashboardPage() {
 
       const data = await res.json();
       console.log(`📦 API Response:`, data);
+      console.log(`📦 API Response type:`, typeof data);
+      console.log(`📦 Is data an array?`, Array.isArray(data));
+      console.log(`📦 data.users exists?`, !!data?.users);
+      console.log(`📦 Is data.users an array?`, Array.isArray(data?.users));
+      if (data?.users) {
+        console.log(`📦 data.users.length:`, data.users.length);
+      }
 
       if (!isMountedRef.current) return;
 
@@ -411,7 +418,8 @@ export default function DashboardPage() {
         : Array.isArray(data?.users) ? data.users
           : [];
 
-      console.log(`👥 Users found: ${users.length}`);
+      console.log(`👥 Users extracted: ${users.length}`);
+      console.log(`👥 First user:`, users[0]);
 
       if (users.length === 0) {
         console.warn(`⚠️ No users found for university: "${university}"`);
@@ -444,6 +452,12 @@ export default function DashboardPage() {
       }
     } catch (err) {
       if (err.name === 'AbortError') return; // Intentional cancellation
+
+      console.error('❌❌❌ FETCH ERROR ❌❌❌');
+      console.error('Error name:', err.name);
+      console.error('Error message:', err.message);
+      console.error('Error stack:', err.stack);
+      console.error('Is background fetch?', isBackground);
 
       if (isMountedRef.current) {
         console.error('Fetch error:', err);

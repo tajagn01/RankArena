@@ -1,4 +1,5 @@
 import express from "express";
+import mongoose from "mongoose";
 import User from "../models/user.js";
 import bcrypt from "bcryptjs";
 import University from "../models/University.js";
@@ -131,19 +132,53 @@ router.post("/verify-otp", async (req, res) => {
 router.post("/login", async (req, res) => {
   const { name, password } = req.body;
   try {
+    // 1. First find the user normally
     const user = await User.findOne({ name }).populate("university");
     if (!user) return res.status(400).json({ error: "User not found" });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ error: "Invalid credentials" });
 
+    // 2. Resolve University Name (Handle Legacy Data)
+    let universityName = "Unknown";
+    let universityUpdated = false;
+
+    if (user.university && user.university.name) {
+      // Normal case: Correctly populated
+      universityName = user.university.name;
+    } else {
+      // Abnormal case: Populate failed (null) or schema mismatch.
+      // Fetch raw doc to check for legacy string data
+      const rawUser = await User.findById(user._id).lean();
+
+      if (rawUser.university) {
+        if (typeof rawUser.university === 'string' && !mongoose.Types.ObjectId.isValid(rawUser.university)) {
+          // It's a legacy string name (e.g. "IIT Bombay")
+          universityName = rawUser.university;
+
+          // AUTO-FIX: Try to link to real University doc
+          const realUni = await University.findOne({ name: universityName });
+          if (realUni) {
+            console.log(`🔄 Migrating legacy user '${user.name}' from string '${universityName}' to ID ${realUni._id}`);
+            user.university = realUni._id;
+            universityUpdated = true;
+          }
+        }
+      }
+    }
+
+    // 3. Update LeetCode Stats if needed
     if (user.leetcodeUsername && (!user.stats || !user.stats.totalSolved)) {
       const freshStats = await fetchLeetCodeUser(user.leetcodeUsername);
       if (freshStats) {
         user.stats = freshStats;
         user.lastProfileFetch = new Date();
-        await user.save();
+        universityUpdated = true; // Mark for save
       }
+    }
+
+    if (universityUpdated) {
+      await user.save();
     }
 
     res.json({
@@ -152,10 +187,11 @@ router.post("/login", async (req, res) => {
         name: user.name,
         leetcodeUsername: user.leetcodeUsername,
         stats: user.stats,
-        university: user.university?.name || "Unknown"
+        university: universityName
       }
     });
   } catch (err) {
+    console.error("Login error:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -177,14 +213,62 @@ router.post("/university-users", async (req, res) => {
 
     console.log(`✅ Found university: ${uni.name} (ID: ${uni._id})`);
 
-    const users = await User.find({
-      university: uni._id,
-      $or: [
-        { country: "India" },
-        { country: null },
-        { country: { $exists: false } }
-      ]
+    // Query 1: Find users with ObjectId reference (new schema)
+    let usersWithId = [];
+    try {
+      console.log(`🔍 Query 1: Searching for users with university ObjectId: ${uni._id}`);
+      usersWithId = await User.find({
+        university: uni._id,
+        $or: [
+          { country: "India" },
+          { country: null },
+          { country: { $exists: false } }
+        ]
+      });
+      console.log(`✅ Query 1 found ${usersWithId.length} users with ObjectId`);
+    } catch (err) {
+      console.error(`❌ Query 1 failed:`, err.message);
+    }
+
+    // Query 2: Find users with string reference (legacy schema)
+    let legacyUsers = [];
+    try {
+      console.log(`🔍 Query 2: Searching for users with university string: "${university}"`);
+      legacyUsers = await User.collection.find({
+        university: university,  // String match
+        $or: [
+          { country: "India" },
+          { country: null },
+          { country: { $exists: false } }
+        ]
+      }).toArray();
+      console.log(`✅ Query 2 found ${legacyUsers.length} legacy users with string`);
+    } catch (err) {
+      console.error(`❌ Query 2 failed:`, err.message);
+    }
+
+    // Combine results and remove duplicates by _id
+    const userMap = new Map();
+
+    // Add ObjectId users
+    usersWithId.forEach(u => {
+      try {
+        userMap.set(u._id.toString(), u.toObject());
+      } catch (err) {
+        console.error(`Error converting user ${u._id}:`, err.message);
+      }
     });
+
+    // Add legacy users (already plain objects from collection.find)
+    legacyUsers.forEach(u => {
+      const id = u._id.toString();
+      if (!userMap.has(id)) {
+        userMap.set(id, u);
+      }
+    });
+
+    const users = Array.from(userMap.values());
+    console.log(`📊 Total unique users after merge: ${users.length}`);
 
     console.log(`📊 Found ${users.length} users from ${university}`);
     if (users.length === 0) {
