@@ -382,7 +382,11 @@ export default function DashboardPage() {
     }
 
     try {
-      const res = await fetch(`${API_URL}/api/auth/university-users`, {
+      const fullUrl = `${API_URL}/api/auth/university-users`;
+      console.log(`🌐 Calling API:`, fullUrl);
+      console.log(`🌐 API_URL value:`, API_URL);
+
+      const res = await fetch(fullUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
