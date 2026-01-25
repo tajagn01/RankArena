@@ -364,17 +364,17 @@ export default function DashboardPage() {
   // FETCH UNIVERSITY USERS (stable callback)
   // ─────────────────────────────────────────────────────────────────────────────
   const fetchUniversityUsers = useCallback(async (university, currentUserName, isBackground = false) => {
-    if (!university || fetchInProgressRef.current) return;
+    if (!university) return;
+
+    // Prevent duplicate concurrent calls
+    if (fetchInProgressRef.current) {
+      console.log('⏭️ Skipping duplicate fetch - already in progress');
+      return;
+    }
 
     console.log(`🔍 [Dashboard] Fetching users for university: "${university}"`);
     console.log(`🔍 [Dashboard] Current User: "${currentUserName}"`);
 
-    // Cancel any pending request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    abortControllerRef.current = new AbortController();
     fetchInProgressRef.current = true;
 
     if (isBackground) {
@@ -393,8 +393,7 @@ export default function DashboardPage() {
           "Cache-Control": "no-cache, no-store, must-revalidate",
           "Pragma": "no-cache"
         },
-        body: JSON.stringify({ university }),
-        signal: abortControllerRef.current.signal,
+        body: JSON.stringify({ university })
       });
 
       console.log(`📡 API Response Status: ${res.status}`);
