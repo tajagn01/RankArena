@@ -10,6 +10,7 @@ const StatsSchema = new mongoose.Schema({
 
 const UserSchema = new mongoose.Schema({
   name: { type: String, required: true, unique: true, index: true },
+  email: { type: String, unique: true, index: true, sparse: true },
   password: { type: String, required: true },
   university: { type: mongoose.Schema.Types.ObjectId, ref: "University" },
   leetcodeUsername: { type: String, index: true },

@@ -37,13 +37,13 @@ const getLeetCodeTotals = async () => {
         return data;
       }
     }
-  } catch {}
+  } catch { }
 
   // Fetch from backend endpoint (backend fetches from LeetCode to avoid CORS)
   try {
     const response = await fetch(`${API_URL}/api/leetcode/totals`, {
       method: 'GET',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache'
@@ -52,7 +52,7 @@ const getLeetCodeTotals = async () => {
 
     if (response.ok) {
       const result = await response.json();
-      
+
       const totals = {
         total: result?.total || DEFAULT_TOTALS.total,
         easy: result?.easy || DEFAULT_TOTALS.easy,
@@ -83,7 +83,7 @@ const getCachedData = (university) => {
   try {
     const cached = localStorage.getItem(CACHE_KEY);
     if (!cached) return null;
-    
+
     const { data, timestamp, uni } = JSON.parse(cached);
     if (uni === university && Date.now() - timestamp < CACHE_EXPIRY && Array.isArray(data)) {
       return data;
@@ -128,16 +128,16 @@ const getUserRank = (users, userName) => {
 const LoadingScreen = () => (
   <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-4">
     <div className="flex items-center gap-1">
-      <span 
-        className="w-3 h-3 bg-white rounded-full animate-bounce" 
+      <span
+        className="w-3 h-3 bg-white rounded-full animate-bounce"
         style={{ animationDelay: '0ms', animationDuration: '600ms' }}
       />
-      <span 
-        className="w-3 h-3 bg-white rounded-full animate-bounce" 
+      <span
+        className="w-3 h-3 bg-white rounded-full animate-bounce"
         style={{ animationDelay: '150ms', animationDuration: '600ms' }}
       />
-      <span 
-        className="w-3 h-3 bg-white rounded-full animate-bounce" 
+      <span
+        className="w-3 h-3 bg-white rounded-full animate-bounce"
         style={{ animationDelay: '300ms', animationDuration: '600ms' }}
       />
     </div>
@@ -157,7 +157,7 @@ const ProgressBar = React.memo(({ label, solved, total, colorClass, bgClass, del
     <div className="h-3 bg-white/10 rounded-full overflow-hidden">
       <div
         className={`h-full ${bgClass} rounded-full transition-all duration-1000 ease-out group-hover:brightness-110`}
-        style={{ 
+        style={{
           width: `${Math.min((solved / total) * 100, 100)}%`,
           transitionDelay: `${delay}ms`
         }}
@@ -184,15 +184,15 @@ const StatCard = React.memo(({ label, solved, total, colorClass, borderClass }) 
 // ═══════════════════════════════════════════════════════════════════════════════
 const getTimeAgo = (timestamp) => {
   if (!timestamp) return null;
-  
+
   const now = Date.now();
   const diff = now - timestamp;
-  
+
   const seconds = Math.floor(diff / 1000);
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
-  
+
   if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
   if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
   if (minutes > 0) return `${minutes} min${minutes > 1 ? 's' : ''} ago`;
@@ -203,10 +203,10 @@ const getTimeAgo = (timestamp) => {
 // LEADERBOARD ROW COMPONENT (Desktop)
 // ═══════════════════════════════════════════════════════════════════════════════
 const LeaderboardRow = React.memo(({ user: u, index, isCurrentUser }) => {
-  const rankColor = index === 0 ? "text-yellow-400" 
-    : index === 1 ? "text-gray-300" 
-    : index === 2 ? "text-orange-400" 
-    : "text-white/60";
+  const rankColor = index === 0 ? "text-yellow-400"
+    : index === 1 ? "text-gray-300"
+      : index === 2 ? "text-orange-400"
+        : "text-white/60";
 
   return (
     <tr className={`border-b border-white/5 hover:bg-white/5 transition cursor-pointer ${isCurrentUser ? "bg-white/10" : ""}`}>
@@ -248,10 +248,10 @@ const LeaderboardRow = React.memo(({ user: u, index, isCurrentUser }) => {
 // LEADERBOARD CARD COMPONENT (Mobile)
 // ═══════════════════════════════════════════════════════════════════════════════
 const LeaderboardCard = React.memo(({ user: u, index, isCurrentUser }) => {
-  const rankColor = index === 0 ? "text-yellow-400" 
-    : index === 1 ? "text-gray-300" 
-    : index === 2 ? "text-orange-400" 
-    : "text-white/60";
+  const rankColor = index === 0 ? "text-yellow-400"
+    : index === 1 ? "text-gray-300"
+      : index === 2 ? "text-orange-400"
+        : "text-white/60";
 
   return (
     <div className={`border border-white/10 rounded-lg p-3 ${isCurrentUser ? "bg-white/10 border-white/20" : "bg-black/20"}`}>
@@ -311,10 +311,10 @@ const RefreshButton = React.memo(({ onClick, disabled }) => (
     className="shrink-0 flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
     title="Refresh Stats"
   >
-    <svg 
-      className={`w-5 h-5 ${disabled ? 'animate-spin' : ''}`} 
-      fill="none" 
-      stroke="currentColor" 
+    <svg
+      className={`w-5 h-5 ${disabled ? 'animate-spin' : ''}`}
+      fill="none"
+      stroke="currentColor"
       viewBox="0 0 24 24"
     >
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -341,9 +341,9 @@ export default function DashboardPage() {
   const [isFetchingBackground, setIsFetchingBackground] = useState(false);
   const [dataFetchedAt, setDataFetchedAt] = useState(null);
   const [leetcodeTotals, setLeetcodeTotals] = useState(DEFAULT_TOTALS);
-  
+
   const navigate = useNavigate();
-  
+
   // ─────────────────────────────────────────────────────────────────────────────
   // REFS (prevent stale closures and race conditions)
   // ─────────────────────────────────────────────────────────────────────────────
@@ -365,25 +365,26 @@ export default function DashboardPage() {
   // ─────────────────────────────────────────────────────────────────────────────
   const fetchUniversityUsers = useCallback(async (university, currentUserName, isBackground = false) => {
     if (!university || fetchInProgressRef.current) return;
-    
-    console.log(`🔍 Fetching users for university: "${university}"`);
-    
+
+    console.log(`🔍 [Dashboard] Fetching users for university: "${university}"`);
+    console.log(`🔍 [Dashboard] Current User: "${currentUserName}"`);
+
     // Cancel any pending request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
-    
+
     abortControllerRef.current = new AbortController();
     fetchInProgressRef.current = true;
-    
+
     if (isBackground) {
       setIsFetchingBackground(true);
     }
-    
+
     try {
       const res = await fetch(`${API_URL}/api/auth/university-users`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "Cache-Control": "no-cache, no-store, must-revalidate",
           "Pragma": "no-cache"
@@ -391,42 +392,42 @@ export default function DashboardPage() {
         body: JSON.stringify({ university }),
         signal: abortControllerRef.current.signal,
       });
-      
+
       console.log(`📡 API Response Status: ${res.status}`);
-      
+
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         console.error(`❌ API Error:`, errorData);
         throw new Error(errorData.error || `HTTP ${res.status}`);
       }
-      
+
       const data = await res.json();
       console.log(`📦 API Response:`, data);
-      
+
       if (!isMountedRef.current) return;
-      
+
       // Safe array extraction
-      const users = Array.isArray(data) ? data 
-        : Array.isArray(data?.users) ? data.users 
-        : [];
-      
+      const users = Array.isArray(data) ? data
+        : Array.isArray(data?.users) ? data.users
+          : [];
+
       console.log(`👥 Users found: ${users.length}`);
-      
+
       if (users.length === 0) {
         console.warn(`⚠️ No users found for university: "${university}"`);
         console.warn(`💡 Tip: Make sure the university name exactly matches the database`);
       }
-      
+
       // Sort by total solved
       const sorted = [...users].sort(
         (a, b) => (b?.stats?.totalSolved ?? 0) - (a?.stats?.totalSolved ?? 0)
       );
-      
+
       setUniversityUsers(sorted);
       setCachedData(university, sorted);
       setDataFetchedAt(Date.now());
       setError(null);
-      
+
       // Update current user stats if found
       if (currentUserName) {
         const foundUser = sorted.find(u => u?.name === currentUserName);
@@ -436,14 +437,14 @@ export default function DashboardPage() {
             const updated = { ...prev, stats: foundUser.stats };
             try {
               localStorage.setItem("user", JSON.stringify(updated));
-            } catch {}
+            } catch { }
             return updated;
           });
         }
       }
     } catch (err) {
       if (err.name === 'AbortError') return; // Intentional cancellation
-      
+
       if (isMountedRef.current) {
         console.error('Fetch error:', err);
         if (!isBackground) {
@@ -463,16 +464,16 @@ export default function DashboardPage() {
   // ─────────────────────────────────────────────────────────────────────────────
   const handleRefresh = useCallback(async () => {
     if (refreshing || !user?.university) return;
-    
+
     setRefreshing(true);
-    
+
     try {
       const res = await fetch(`${API_URL}/api/refresh-university`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ university: user.university }),
       });
-      
+
       if (res.ok) {
         await fetchUniversityUsers(user.university, user.name, false);
         setLastRefresh(new Date());
@@ -500,7 +501,7 @@ export default function DashboardPage() {
   // ─────────────────────────────────────────────────────────────────────────────
   useEffect(() => {
     isMountedRef.current = true;
-    
+
     const initDashboard = async () => {
       // Fetch LeetCode totals (runs in parallel)
       getLeetCodeTotals().then(totals => {
@@ -526,18 +527,18 @@ export default function DashboardPage() {
         navigate("/login");
         return;
       }
-      
+
       if (!storedUser?.university) {
         console.error("❌ User has no university set!");
         navigate("/login");
         return;
       }
-      
+
       setUser(storedUser);
-      
+
       // Try cache first (stale-while-revalidate)
       const cached = getCachedData(storedUser.university);
-      
+
       // Get cache timestamp
       try {
         const cachedRaw = localStorage.getItem(CACHE_KEY);
@@ -545,8 +546,8 @@ export default function DashboardPage() {
           const { timestamp } = JSON.parse(cachedRaw);
           setDataFetchedAt(timestamp);
         }
-      } catch {}
-      
+      } catch { }
+
       if (cached && cached.length > 0) {
         setUniversityUsers(cached);
         setLoading(false);
@@ -565,23 +566,23 @@ export default function DashboardPage() {
         });
       }
     };
-    
+
     initDashboard();
-    
+
     // Set up auto-refresh every 24 hours
     const checkAutoRefresh = () => {
       try {
         const lastRefreshTime = localStorage.getItem(LAST_AUTO_REFRESH_KEY);
         const now = Date.now();
-        
+
         if (!lastRefreshTime) {
           // First time, mark it
           localStorage.setItem(LAST_AUTO_REFRESH_KEY, now.toString());
           return;
         }
-        
+
         const timeSinceLastRefresh = now - parseInt(lastRefreshTime);
-        
+
         // If 24 hours have passed, trigger auto-refresh
         if (timeSinceLastRefresh >= AUTO_REFRESH_INTERVAL) {
           const storedUser = localStorage.getItem("user");
@@ -600,10 +601,10 @@ export default function DashboardPage() {
         console.error('Auto-refresh check failed:', err);
       }
     };
-    
+
     checkAutoRefresh();
     const autoRefreshInterval = setInterval(checkAutoRefresh, 60 * 60 * 1000); // Check every hour
-    
+
     // Cleanup
     return () => {
       isMountedRef.current = false;
@@ -619,18 +620,18 @@ export default function DashboardPage() {
   // ─────────────────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!mounted || loading) return;
-    
+
     let ticking = false;
-    
+
     const handleScroll = () => {
       if (ticking) return;
-      
+
       ticking = true;
       requestAnimationFrame(() => {
         const scrollTop = window.scrollY;
         const scrollHeight = document.documentElement.scrollHeight;
         const clientHeight = window.innerHeight;
-        
+
         if (scrollTop + clientHeight >= scrollHeight - SCROLL_THRESHOLD) {
           if (visibleCount < universityUsers.length) {
             loadMore();
@@ -639,9 +640,9 @@ export default function DashboardPage() {
         ticking = false;
       });
     };
-    
+
     window.addEventListener('scroll', handleScroll, { passive: true });
-    
+
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
@@ -660,7 +661,7 @@ export default function DashboardPage() {
   return (
     <div className="dashboard-page min-h-screen bg-black pt-24 px-4 pb-12 relative">
       {/* Grid Background - GPU accelerated */}
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none will-change-auto"
         style={{
           backgroundImage: `
@@ -671,16 +672,16 @@ export default function DashboardPage() {
           contain: 'strict'
         }}
       />
-      
+
       {/* Vignette Overlay */}
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background: 'radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.7) 100%)',
           contain: 'strict'
         }}
       />
-      
+
       {/* Main Content */}
       <div className="max-w-4xl mx-auto relative z-10">
         {/* ═══════════════════════════════════════════════════════════════════ */}
@@ -697,33 +698,33 @@ export default function DashboardPage() {
         <div className={`bg-black/40 border border-white/10 rounded-xl p-6 mb-6 backdrop-blur-md transition-all duration-700 ease-out delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <h2 className="text-xl font-semibold text-white mb-6">Your Progress</h2>
           <div className="flex flex-col gap-4">
-            <ProgressBar 
-              label="Total Solved" 
-              solved={stats.totalSolved} 
+            <ProgressBar
+              label="Total Solved"
+              solved={stats.totalSolved}
               total={leetcodeTotals.total}
               colorClass="text-white/80"
               bgClass="bg-white"
               delay={0}
             />
-            <ProgressBar 
-              label="Easy" 
-              solved={stats.easySolved} 
+            <ProgressBar
+              label="Easy"
+              solved={stats.easySolved}
               total={leetcodeTotals.easy}
               colorClass="text-green-400/80"
               bgClass="bg-green-500"
               delay={100}
             />
-            <ProgressBar 
-              label="Medium" 
-              solved={stats.mediumSolved} 
+            <ProgressBar
+              label="Medium"
+              solved={stats.mediumSolved}
               total={leetcodeTotals.medium}
               colorClass="text-yellow-400/80"
               bgClass="bg-yellow-500"
               delay={200}
             />
-            <ProgressBar 
-              label="Hard" 
-              solved={stats.hardSolved} 
+            <ProgressBar
+              label="Hard"
+              solved={stats.hardSolved}
               total={leetcodeTotals.hard}
               colorClass="text-red-400/80"
               bgClass="bg-red-500"
@@ -763,7 +764,7 @@ export default function DashboardPage() {
         {/* ═══════════════════════════════════════════════════════════════════ */}
         {/* LEADERBOARD SECTION */}
         {/* ═══════════════════════════════════════════════════════════════════ */}
-        <div 
+        <div
           ref={leaderboardRef}
           className={`leaderboard-section bg-black/40 border border-white/10 rounded-xl p-4 md:p-6 backdrop-blur-md transition-all duration-700 ease-out delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
         >
@@ -774,7 +775,7 @@ export default function DashboardPage() {
             </h2>
             <RefreshButton onClick={handleRefresh} disabled={refreshing} />
           </div>
-          
+
           {/* Status Messages */}
           {lastRefresh && (
             <p className="text-white/40 text-xs mb-4">
@@ -804,7 +805,7 @@ export default function DashboardPage() {
               Data fetched {getTimeAgo(dataFetchedAt)}
             </p>
           )}
-          
+
           {/* Desktop Table */}
           <div className="hidden md:block overflow-x-auto leaderboard-scroll">
             <table className="w-full table-fixed">
@@ -821,7 +822,7 @@ export default function DashboardPage() {
               </thead>
               <tbody>
                 {visibleUsers.map((u, index) => (
-                  <LeaderboardRow 
+                  <LeaderboardRow
                     key={u._id || `user-${index}`}
                     user={u}
                     index={index}
@@ -847,7 +848,7 @@ export default function DashboardPage() {
           {/* Mobile Cards */}
           <div className="md:hidden flex flex-col gap-3 leaderboard-scroll">
             {visibleUsers.map((u, index) => (
-              <LeaderboardCard 
+              <LeaderboardCard
                 key={u._id || `user-${index}`}
                 user={u}
                 index={index}
