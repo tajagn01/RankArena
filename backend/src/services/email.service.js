@@ -1,23 +1,15 @@
-import nodemailer from "nodemailer";
+import { Resend } from 'resend';
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587, // or 465 for SSL
-  secure: false, // true for 465, false for other ports
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const sendOtpEmail = async (to, otp) => {
   try {
-    const info = await transporter.sendMail({
-      from: `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_FROM}>`,
-      to,
+    const { data, error } = await resend.emails.send({
+      from: `${process.env.SMTP_FROM_NAME} <onboarding@resend.dev>`,
+      to: [to],
       subject: "Verify Your Account - RankArena",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -31,7 +23,13 @@ export const sendOtpEmail = async (to, otp) => {
         </div>
       `,
     });
-    console.log("Message sent: %s", info.messageId);
+
+    if (error) {
+      console.error("Resend API error:", error);
+      return false;
+    }
+
+    console.log("Email sent successfully:", data.id);
     return true;
   } catch (error) {
     console.error("Error sending email: ", error);
