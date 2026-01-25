@@ -18,7 +18,7 @@ export const sendOtpEmail = async (to, otp) => {
     const info = await transporter.sendMail({
       from: `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_FROM}>`,
       to,
-      subject: "Verify Your Account - DayFlow HRMS", // Or RankArena, using what user gave
+      subject: "Verify Your Account - RankArena",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2>Verify Your Email</h2>
