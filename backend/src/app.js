@@ -3,6 +3,7 @@ import { connectDB } from "./config/db.js";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import cron from "node-cron";
 import User from "./models/user.js";
 import { fetchLeetCodeUser, fetchLeetCodeTotals } from "./services/leetcode.service.js";
@@ -30,6 +31,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
+app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 
 

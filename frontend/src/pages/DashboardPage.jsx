@@ -393,6 +393,7 @@ export default function DashboardPage() {
           "Cache-Control": "no-cache, no-store, must-revalidate",
           "Pragma": "no-cache"
         },
+        credentials: "include", // Include cookies
         body: JSON.stringify({ university })
       });
 
@@ -488,6 +489,7 @@ export default function DashboardPage() {
       const res = await fetch(`${API_URL}/api/refresh-university`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include", // Include cookies
         body: JSON.stringify({ university: user.university }),
       });
 
@@ -527,60 +529,156 @@ export default function DashboardPage() {
         }
       });
 
-      // Check authentication
-      let storedUser;
+      // Verify session with backend
       try {
-        const stored = localStorage.getItem("user");
-        if (!stored) {
-          console.log("❌ No user in localStorage, redirecting to login");
+        const sessionRes = await fetch(`${API_URL}/api/auth/me`, {
+          method: "GET",
+          credentials: "include",
+        });
+
+        if (sessionRes.ok) {
+          const sessionData = await sessionRes.json();
+          const sessionUser = sessionData.user;
+          
+          // Update localStorage with fresh data from session
+          localStorage.setItem("user", JSON.stringify(sessionUser));
+          setUser(sessionUser);
+          
+          console.log("✅ Session verified, user loaded:", sessionUser);
+          console.log(`📍 University: "${sessionUser.university}"`);
+
+          if (!sessionUser?.university) {
+            console.error("❌ User has no university set!");
+            navigate("/login");
+            return;
+          }
+
+          // Try cache first (stale-while-revalidate)
+          const cached = getCachedData(sessionUser.university);
+
+          // Get cache timestamp
+          try {
+            const cachedRaw = localStorage.getItem(CACHE_KEY);
+            if (cachedRaw) {
+              const { timestamp } = JSON.parse(cachedRaw);
+              setDataFetchedAt(timestamp);
+            }
+          } catch { }
+
+          if (cached && cached.length > 0) {
+            setUniversityUsers(cached);
+            setLoading(false);
+            // Trigger animation after paint
+            requestAnimationFrame(() => {
+              setTimeout(() => setMounted(true), 50);
+            });
+            // Background revalidation
+            fetchUniversityUsers(sessionUser.university, sessionUser.name, true);
+          } else {
+            // No cache - full load
+            await fetchUniversityUsers(sessionUser.university, sessionUser.name, false);
+            setLoading(false);
+            requestAnimationFrame(() => {
+              setTimeout(() => setMounted(true), 50);
+            });
+          }
+        } else {
+          // Session invalid or expired
+          console.log("❌ Session invalid, checking localStorage fallback");
+          
+          // Try localStorage as fallback
+          let storedUser;
+          try {
+            const stored = localStorage.getItem("user");
+            if (!stored) {
+              console.log("❌ No user in localStorage, redirecting to login");
+              navigate("/login");
+              return;
+            }
+            storedUser = JSON.parse(stored);
+            console.log("⚠️ Using localStorage fallback (session expired):", storedUser);
+            console.log(`📍 University: "${storedUser.university}"`);
+          } catch (err) {
+            console.error("❌ Failed to parse user data:", err);
+            navigate("/login");
+            return;
+          }
+
+          if (!storedUser?.university) {
+            console.error("❌ User has no university set!");
+            navigate("/login");
+            return;
+          }
+
+          setUser(storedUser);
+
+          // Try cache first
+          const cached = getCachedData(storedUser.university);
+
+          try {
+            const cachedRaw = localStorage.getItem(CACHE_KEY);
+            if (cachedRaw) {
+              const { timestamp } = JSON.parse(cachedRaw);
+              setDataFetchedAt(timestamp);
+            }
+          } catch { }
+
+          if (cached && cached.length > 0) {
+            setUniversityUsers(cached);
+            setLoading(false);
+            requestAnimationFrame(() => {
+              setTimeout(() => setMounted(true), 50);
+            });
+            fetchUniversityUsers(storedUser.university, storedUser.name, true);
+          } else {
+            await fetchUniversityUsers(storedUser.university, storedUser.name, false);
+            setLoading(false);
+            requestAnimationFrame(() => {
+              setTimeout(() => setMounted(true), 50);
+            });
+          }
+        }
+      } catch (err) {
+        console.error("❌ Session verification failed:", err);
+        // Fallback to localStorage
+        let storedUser;
+        try {
+          const stored = localStorage.getItem("user");
+          if (!stored) {
+            console.log("❌ No user in localStorage, redirecting to login");
+            navigate("/login");
+            return;
+          }
+          storedUser = JSON.parse(stored);
+          console.log("⚠️ Using localStorage fallback (network error):", storedUser);
+        } catch (err) {
+          console.error("❌ Failed to parse user data:", err);
           navigate("/login");
           return;
         }
-        storedUser = JSON.parse(stored);
-        console.log("✅ User loaded from localStorage:", storedUser);
-        console.log(`📍 University: "${storedUser.university}"`);
-      } catch (err) {
-        console.error("❌ Failed to parse user data:", err);
-        navigate("/login");
-        return;
-      }
 
-      if (!storedUser?.university) {
-        console.error("❌ User has no university set!");
-        navigate("/login");
-        return;
-      }
-
-      setUser(storedUser);
-
-      // Try cache first (stale-while-revalidate)
-      const cached = getCachedData(storedUser.university);
-
-      // Get cache timestamp
-      try {
-        const cachedRaw = localStorage.getItem(CACHE_KEY);
-        if (cachedRaw) {
-          const { timestamp } = JSON.parse(cachedRaw);
-          setDataFetchedAt(timestamp);
+        if (!storedUser?.university) {
+          console.error("❌ User has no university set!");
+          navigate("/login");
+          return;
         }
-      } catch { }
 
-      if (cached && cached.length > 0) {
-        setUniversityUsers(cached);
-        setLoading(false);
-        // Trigger animation after paint
-        requestAnimationFrame(() => {
-          setTimeout(() => setMounted(true), 50);
-        });
-        // Background revalidation
-        fetchUniversityUsers(storedUser.university, storedUser.name, true);
-      } else {
-        // No cache - full load
-        await fetchUniversityUsers(storedUser.university, storedUser.name, false);
-        setLoading(false);
-        requestAnimationFrame(() => {
-          setTimeout(() => setMounted(true), 50);
-        });
+        setUser(storedUser);
+
+        const cached = getCachedData(storedUser.university);
+        if (cached && cached.length > 0) {
+          setUniversityUsers(cached);
+          setLoading(false);
+          requestAnimationFrame(() => {
+            setTimeout(() => setMounted(true), 50);
+          });
+        } else {
+          await fetchUniversityUsers(storedUser.university, storedUser.name, false);
+          setLoading(false);
+          requestAnimationFrame(() => {
+            setTimeout(() => setMounted(true), 50);
+          });
+        }
       }
     };
 
@@ -609,6 +707,7 @@ export default function DashboardPage() {
             fetch(`${API_URL}/api/refresh-university`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
+              credentials: "include",
               body: JSON.stringify({ university: user.university }),
             }).catch(err => console.error('Auto-refresh failed:', err));
           }

@@ -4,7 +4,7 @@ import User from "../models/user.js";
 import bcrypt from "bcryptjs";
 import University from "../models/University.js";
 import { fetchLeetCodeUser } from "../services/leetcode.service.js";
-
+import { generateToken, verifyToken } from "../middleware/auth.js";
 
 import { sendOtpEmail } from "../services/email.service.js";
 import { generateOtp, storeOtp, verifyOtp } from "../services/otp.service.js";
@@ -193,6 +193,17 @@ router.post("/login", async (req, res) => {
       await user.save();
     }
 
+    // Generate JWT token
+    const token = generateToken(user._id);
+
+    // Set HTTP-only cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
     res.json({
       message: "Login successful",
       user: {
@@ -291,6 +302,49 @@ router.post("/university-users", async (req, res) => {
     res.json({ users });
   } catch (err) {
     console.error(`❌ Error fetching university users:`, err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Logout endpoint
+router.post("/logout", (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  });
+  res.json({ message: "Logged out successfully" });
+});
+
+// Verify session and get current user
+router.get("/me", verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).populate("university");
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    let universityName = "Unknown";
+    if (user.university && user.university.name) {
+      universityName = user.university.name;
+    } else {
+      const rawUser = await User.findById(user._id).lean();
+      if (rawUser.university && typeof rawUser.university === 'string') {
+        universityName = rawUser.university;
+      }
+    }
+
+    res.json({
+      user: {
+        name: user.name,
+        email: user.email,
+        leetcodeUsername: user.leetcodeUsername,
+        stats: user.stats,
+        university: universityName
+      }
+    });
+  } catch (err) {
+    console.error("Get user error:", err);
     res.status(500).json({ error: err.message });
   }
 });

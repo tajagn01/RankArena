@@ -32,13 +32,17 @@ export default function LoginPage() {
       const res = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include", // Include cookies
         body: JSON.stringify({ name, password })
       });
       const data = await res.json();
       
       if (!res.ok) throw new Error(data.error || "Login failed");
+      
+      // Store user data in localStorage as backup
       localStorage.setItem("user", JSON.stringify(data.user));
       window.dispatchEvent(new Event("storage"));
+      
       setMessage("Login successful! Redirecting...");
       setTimeout(() => navigate("/dashboard"), 1000);
     } catch (err) {

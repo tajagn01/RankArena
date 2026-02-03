@@ -24,10 +24,22 @@ export default function NavBar() {
     navigate("/signup");
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    setIsLoggedIn(false);
-    navigate("/");
+  const handleLogout = async () => {
+    try {
+      // Call logout endpoint to clear cookie
+      await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:4000"}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      // Clear localStorage regardless
+      localStorage.removeItem("user");
+      setIsLoggedIn(false);
+      window.dispatchEvent(new Event("storage"));
+      navigate("/");
+    }
   };
 
   const handleDashboard = () => {

@@ -48,6 +48,7 @@ async function request(url, options = {}) {
         headers: { 'Content-Type': 'application/json' },
         body: body ? JSON.stringify(body) : null,
         signal: controller.signal,
+        credentials: 'include', // Include cookies in requests
       });
 
       clearTimeout(timeoutId);
@@ -90,6 +91,13 @@ export const api = {
 
   signup: (userData) =>
     request(`${API_URL}/api/auth/signup`, { method: 'POST', body: userData }),
+
+  logout: () =>
+    request(`${API_URL}/api/auth/logout`, { method: 'POST' }),
+
+  // Get current user from session
+  getCurrentUser: () =>
+    request(`${API_URL}/api/auth/me`, { method: 'GET' }),
 
   // University
   getUniversityUsers: async (university) => {
