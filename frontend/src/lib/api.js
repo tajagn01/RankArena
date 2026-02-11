@@ -24,9 +24,9 @@ async function request(url, options = {}) {
   const {
     method = 'GET',
     body = null,
-    timeout = 15000,
+    timeout = 45000,
     dedupe = true,
-    retries = 1,
+    retries = 2,
   } = options;
 
   // Create unique key for deduplication

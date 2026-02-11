@@ -9,91 +9,113 @@ import { generateToken, verifyToken } from "../middleware/auth.js";
 import { sendOtpEmail } from "../services/email.service.js";
 import { generateOtp, storeOtp, verifyOtp } from "../services/otp.service.js";
 
+const emailVerificationEnabled = process.env.DISABLE_EMAIL_VERIFICATION !== "true";
+
+const validateAndFetchUserData = async ({ name, email, password, university, leetcodeUsername }) => {
+  if (!password || password.length < 6) {
+    throw new Error("Password must be at least 6 characters");
+  }
+
+  const existingUser = await User.findOne({ name });
+  if (existingUser) {
+    throw new Error("Username already taken");
+  }
+
+  // Email uniqueness check removed because email is optional/not required for signup
+
+  const existingLeetcode = await User.findOne({ leetcodeUsername });
+  if (existingLeetcode) {
+    throw new Error("This LeetCode account is already registered");
+  }
+
+  let stats;
+  try {
+    stats = await fetchLeetCodeUser(leetcodeUsername);
+  } catch (err) {
+    if (err.code === "ECONNABORTED" || err.message.includes("timeout")) {
+      stats = { totalSolved: 0, easySolved: 0, mediumSolved: 0, hardSolved: 0, country: null, lastUpdated: new Date() };
+    } else {
+      throw err;
+    }
+  }
+
+  if (!stats) {
+    throw new Error("LeetCode username not found. Please check spelling.");
+  }
+
+  if (stats.country && stats.country !== "India") {
+    throw new Error("Only LeetCode accounts from India are allowed to register.");
+  }
+
+  return {
+    name,
+    email: null,
+    password: await bcrypt.hash(password, 10),
+    university,
+    leetcodeUsername,
+    country: stats.country || "India",
+    stats
+  };
+};
+
+const createUserAndRespond = async (userData, res) => {
+  let uni = await University.findOne({ name: userData.university });
+  if (!uni) {
+    uni = await University.create({ name: userData.university });
+  }
+
+  const user = await User.create({
+    name: userData.name,
+    email: userData.email || null,
+    password: userData.password,
+    university: uni._id,
+    leetcodeUsername: userData.leetcodeUsername,
+    country: userData.country,
+    stats: userData.stats,
+    lastProfileFetch: new Date()
+  });
+
+  res.status(201).json({
+    message: "Signup successful! You can now login.",
+    user: {
+      name: user.name,
+      email: user.email,
+      leetcodeUsername: user.leetcodeUsername,
+      stats: user.stats,
+      university: userData.university
+    }
+  });
+};
+
 const router = express.Router();
 
 router.post("/send-otp", async (req, res) => {
   const { name, email, password, university, leetcodeUsername } = req.body;
 
   try {
-    if (!password || password.length < 6) {
-      console.log("Validation failed: Password too short");
-      return res.status(400).json({ error: "Password must be at least 6 characters" });
-    }
+    const userData = await validateAndFetchUserData({ name, email, password, university, leetcodeUsername });
 
-    const existingUser = await User.findOne({ name });
-    if (existingUser) {
-      console.log(`Validation failed: Username '${name}' already taken`);
-      return res.status(400).json({ error: "Username already taken" });
+    // If email verification is disabled or email is not provided, create immediately
+    if (!emailVerificationEnabled || !email) {
+      await createUserAndRespond(userData, res);
+      return;
     }
-
-    const existingEmail = await User.findOne({ email });
-    if (existingEmail) {
-      console.log(`Validation failed: Email '${email}' already registered`);
-      return res.status(400).json({ error: "Email already registered" });
-    }
-
-    const existingLeetcode = await User.findOne({ leetcodeUsername });
-    if (existingLeetcode) {
-      console.log(`Validation failed: LeetCode '${leetcodeUsername}' already registered`);
-      return res.status(400).json({ error: "This LeetCode account is already registered" });
-    }
-
-    console.log(`Fetching LeetCode stats for: ${leetcodeUsername}`);
-    let stats;
-    try {
-      stats = await fetchLeetCodeUser(leetcodeUsername);
-    } catch (err) {
-      console.error(`LeetCode fetch error for '${leetcodeUsername}':`, err.message);
-      if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
-        console.log(`⚠️ LeetCode timeout - using default stats`);
-        stats = { totalSolved: 0, easySolved: 0, mediumSolved: 0, hardSolved: 0, country: null, lastUpdated: new Date() };
-      } else {
-        // Re-throw other errors to be handled below
-        throw err;
-      }
-    }
-
-    // fetchLeetCodeUser now throws on network error, so if we get here and it's null, 
-    // it simply means the user was not found or the GraphQL query returned no match.
-    if (!stats) {
-      console.log(`Validation failed: LeetCode user '${leetcodeUsername}' not found`);
-      return res.status(400).json({ error: "LeetCode username not found. Please check spelling." });
-    }
-
-    if (stats.country && stats.country !== "India") {
-      console.log(`Validation failed: Country '${stats.country}' is not India`);
-      return res.status(400).json({ error: "Only LeetCode accounts from India are allowed to register." });
-    }
-
-    // Prepare user data to be stored temporarily
-    const userData = {
-      name,
-      email,
-      password: await bcrypt.hash(password, 10), // Hash early before storing? yes.
-      university,
-      leetcodeUsername,
-      country: stats.country || "India",
-      stats
-    };
 
     const otp = generateOtp();
     const stored = await storeOtp(email, otp, userData);
 
     if (!stored) {
-      console.error("Redis storage failed");
       return res.status(500).json({ error: "Failed to process OTP request (Redis unavailable)" });
     }
 
     const emailSent = await sendOtpEmail(email, otp);
     if (!emailSent) {
-      console.error("Email sending failed");
       return res.status(500).json({ error: "Failed to send OTP email" });
     }
 
     res.json({ message: "OTP sent to your email", email });
 
   } catch (err) {
-    console.error("Send OTP Error:", err);
     res.status(400).json({ error: err.message });
   }
 });
@@ -101,40 +123,17 @@ router.post("/send-otp", async (req, res) => {
 router.post("/verify-otp", async (req, res) => {
   const { email, otp } = req.body;
   try {
+    if (!emailVerificationEnabled) {
+      return res.status(400).json({ error: "Email verification is disabled" });
+    }
+
     const result = await verifyOtp(email, otp);
     if (!result.success) {
       return res.status(400).json({ error: result.message });
     }
 
     const { userData } = result;
-
-    // Create University if needed
-    let uni = await University.findOne({ name: userData.university });
-    if (!uni) {
-      uni = await University.create({ name: userData.university });
-    }
-
-    const user = await User.create({
-      name: userData.name,
-      email: userData.email,
-      password: userData.password,
-      university: uni._id,
-      leetcodeUsername: userData.leetcodeUsername,
-      country: userData.country,
-      stats: userData.stats,
-      lastProfileFetch: new Date()
-    });
-
-    res.status(201).json({
-      message: "Signup successful! You can now login.",
-      user: {
-        name: user.name,
-        email: user.email,
-        leetcodeUsername: user.leetcodeUsername,
-        stats: user.stats,
-        university: userData.university // We know the name from userData
-      }
-    });
+    await createUserAndRespond(userData, res);
 
   } catch (err) {
     res.status(500).json({ error: err.message });

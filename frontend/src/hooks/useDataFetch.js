@@ -65,7 +65,7 @@ export function useDataFetch(key, fetcher, options = {}) {
   const {
     cacheTime = 5 * 60 * 1000, // 5 minutes default
     revalidateOnMount = true,
-    revalidateOnFocus = false,
+    revalidateOnFocus = true,
   } = options;
 
   // State
